@@ -1,0 +1,258 @@
+.panel {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: #ffffff;
+}
+
+/* Gündüz göğü: üstte mavi, ufukta şeftali. Sade bırakıldı; dikkat adada kalsın. */
+.sky {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 50% at 50% 55%, rgb(255 255 255 / 0.35), transparent 70%),
+    linear-gradient(transparent 62%, rgb(255 214 190 / 0.55) 100%),
+    linear-gradient(#78bdf0, #a9d6f7 55%, #d7ecfb);
+}
+
+.top {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 14px clamp(14px, 3vw, 28px) 6px;
+  pointer-events: none;
+}
+
+.top > * {
+  pointer-events: auto;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  background: #3a3550;
+  color: #ffffff;
+  font-family: var(--font-pixel), monospace;
+  font-size: 17px;
+  text-decoration: none;
+  box-shadow:
+    inset 3px 3px 0 rgb(255 255 255 / 0.2),
+    inset -3px -3px 0 rgb(0 0 0 / 0.35),
+    0 0 0 3px #17131f;
+}
+
+.back:hover {
+  filter: brightness(1.15);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 700;
+  text-shadow:
+    3px 3px 0 #5b4bc4,
+    5px 5px 0 rgb(0 0 0 / 0.25);
+}
+
+.demo {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  background: #ffe45c;
+  color: #3b3000;
+  font-size: 0.55em;
+  text-shadow: none;
+  vertical-align: middle;
+  box-shadow: 0 0 0 2px #3b3000;
+}
+
+.note {
+  margin: 0 0 0 auto;
+  padding: 6px 12px;
+  background: rgb(23 19 31 / 0.55);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px clamp(8px, 2vw, 24px);
+}
+
+/* Alt çubuk (hotbar) */
+.hotbar {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+  pointer-events: none;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.hotbar > * {
+  pointer-events: auto;
+}
+
+.panel[data-phase="building"] .hotbar {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.panel[data-phase="building"] .hotbar > * {
+  pointer-events: none;
+}
+
+.hotbar ul {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: rgb(23 19 31 / 0.72);
+  box-shadow: 0 0 0 3px #17131f;
+}
+
+.slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  padding: 10px;
+  border: 0;
+  background: #8e889f;
+  cursor: pointer;
+  box-shadow:
+    inset 3px 3px 0 rgb(0 0 0 / 0.35),
+    inset -3px -3px 0 rgb(255 255 255 / 0.2);
+  image-rendering: pixelated;
+}
+
+.slot[data-hot="true"] {
+  background: #b9b3c8;
+  box-shadow:
+    inset 3px 3px 0 rgb(0 0 0 / 0.25),
+    0 0 0 3px #ffffff;
+}
+
+.slot kbd {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  color: #ffffff;
+  font-family: var(--font-pixel), monospace;
+  font-size: 13px;
+  text-shadow: 1px 1px 0 #000000;
+}
+
+.hint {
+  margin: 0;
+  padding: 4px 10px;
+  background: rgb(23 19 31 / 0.55);
+  font-family: var(--font-pixel), monospace;
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Dünya oluşturma göstergesi */
+.generating {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: min(420px, 100% - 32px);
+  padding: 20px 22px;
+  background: rgb(23 19 31 / 0.82);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 4px #17131f;
+}
+
+.genText {
+  margin: 0;
+  font-family: var(--font-pixel), monospace;
+  font-size: 20px;
+  text-align: center;
+}
+
+.bar {
+  width: 100%;
+  height: 18px;
+  padding: 3px;
+  background: #3a3550;
+  box-shadow: inset 2px 2px 0 rgb(0 0 0 / 0.4);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, #5aa65a 0 10px, #4caf50 10px 20px);
+  transform-origin: 0 50%;
+  animation: fill linear forwards;
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  background: #8b86a1;
+  color: #ffffff;
+  font-family: var(--font-pixel), monospace;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow:
+    inset 2px 2px 0 rgb(255 255 255 / 0.25),
+    inset -2px -2px 0 rgb(0 0 0 / 0.3);
+}
+
+.skip kbd {
+  font-family: inherit;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .note {
+    margin-left: 0;
+  }
+
+  .slot {
+    width: 52px;
+    height: 52px;
+    padding: 8px;
+  }
+
+  .hint {
+    font-size: 13px;
+  }
+}

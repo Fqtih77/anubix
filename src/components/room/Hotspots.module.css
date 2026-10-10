@@ -1,0 +1,222 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --cam-k: 1;
+}
+
+.spot {
+  position: absolute;
+}
+
+.hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hit:focus {
+  outline: none;
+}
+
+/* Parmakla dokunulan ekranlarda tıklama alanı biraz büyür. */
+@media (pointer: coarse) {
+  .hit {
+    transform: scale(1.22);
+  }
+}
+
+.layer[data-busy="true"] .hit {
+  cursor: progress;
+}
+
+/* Silüet çizgisi: üzerine gelince ve klavye odağında görünür (odak göstergesi). */
+.outline {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.outline polygon {
+  fill: rgb(255 236 170 / 0.16);
+  stroke: #ffd36b;
+  stroke-width: calc(2.5px / var(--cam-k));
+  stroke-linejoin: round;
+  stroke-dasharray: calc(10px / var(--cam-k)) calc(6px / var(--cam-k));
+}
+
+.hit:hover ~ .outline,
+.hit:focus-visible ~ .outline {
+  opacity: 1;
+}
+
+.hit:focus-visible ~ .outline polygon {
+  stroke: #6b55e8;
+  stroke-width: calc(3.5px / var(--cam-k));
+  stroke-dasharray: none;
+  fill: rgb(139 124 246 / 0.12);
+}
+
+/* Etiket: kameradan bağımsız olarak hep aynı boyutta kalır. */
+.label {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  display: grid;
+  gap: 1px;
+  min-width: max-content;
+  padding: 7px 11px 8px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.96);
+  color: var(--ink);
+  box-shadow:
+    0 8px 22px rgb(58 40 80 / 0.18),
+    0 0 0 1px rgb(58 40 80 / 0.06);
+  font-size: 14px;
+  line-height: 1.25;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 6px)) scale(calc(0.92 / var(--cam-k)));
+  transform-origin: 50% 100%;
+  transition: opacity 0.16s ease;
+  z-index: 2;
+}
+
+.label strong {
+  font-weight: 800;
+}
+
+.label small {
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+
+.hit:hover ~ .label,
+.hit:focus-visible ~ .label {
+  opacity: 1;
+}
+
+/* Keşif parıltısı */
+.marker {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  pointer-events: none;
+  transform: scale(calc(1 / var(--cam-k)));
+}
+
+.marker::before,
+.marker::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.marker::before {
+  background: radial-gradient(circle, #fff7d6 0 28%, #ffd36b 30% 42%, transparent 44%);
+  animation: sparkle 2.6s ease-in-out infinite;
+}
+
+.marker::after {
+  border: 2px solid rgb(255 211 107 / 0.8);
+  animation: ripple 2.6s ease-out infinite;
+}
+
+.marker[data-kind="secret"]::before {
+  background: radial-gradient(circle, #f3efff 0 22%, #b9a8f6 24% 34%, transparent 36%);
+  animation-duration: 5.5s;
+}
+
+.marker[data-kind="secret"]::after {
+  border-color: rgb(185 168 246 / 0.5);
+  animation-duration: 5.5s;
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  70%,
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.spot:has(.hit:hover) .marker,
+.spot:has(.hit:focus-visible) .marker {
+  display: none;
+}
+
+/* Avatarın konuşma balonu */
+.bubble {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -100%) scale(calc(1 / var(--cam-k)));
+  transform-origin: 50% 100%;
+  z-index: 3;
+}
+
+.bubble span {
+  display: block;
+  max-width: 240px;
+  padding: 9px 13px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgb(58 40 80 / 0.2);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  animation: pop 0.28s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.bubble span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.85);
+  }
+}

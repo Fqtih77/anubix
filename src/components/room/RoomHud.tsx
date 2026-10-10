@@ -1,0 +1,130 @@
+import Link from "next/link";
+import { memo } from "react";
+import { REGIONS, type RegionId } from "./layout";
+import styles from "./RoomHud.module.css";
+import type { Activity } from "./roomStore";
+
+interface HudProps {
+  regionIndex: number;
+  onRegion: (index: number) => void;
+  status: string;
+  running: boolean;
+  onSkip: () => void;
+  activity: Activity;
+  onReturn: () => void;
+  reduced: boolean;
+  onToggleMotion: () => void;
+  showExploreHint: boolean;
+}
+
+/** Odanın üst çubuğu ve alt paneli: bölge gezinmesi, durum kartı, atlama düğmesi. */
+function RoomHudImpl({
+  regionIndex,
+  onRegion,
+  status,
+  running,
+  onSkip,
+  activity,
+  onReturn,
+  reduced,
+  onToggleMotion,
+  showExploreHint,
+}: HudProps) {
+  const region = REGIONS[regionIndex] ?? REGIONS[0];
+  const busyCard = running || activity !== "desk";
+  return (
+    <>
+      <header className={styles.topbar}>
+        <Link href="/" className={styles.brand} aria-label="Anubix ana sayfa">
+          anubix<span>.</span>
+        </Link>
+        <span className={styles.chip}>v0.3 · kişisel dünya</span>
+        <nav className={styles.tools} aria-label="Sayfa araçları">
+          <a href="#hizli-bakis" className={styles.tool}>
+            Hızlı liste
+          </a>
+          <button type="button" className={styles.tool} aria-pressed={reduced} onClick={onToggleMotion}>
+            <span aria-hidden="true">{reduced ? "◼" : "▶"}</span> Hareket: {reduced ? "azaltılmış" : "açık"}
+          </button>
+          <a href="https://github.com/Fqtih77/anubix" target="_blank" rel="noreferrer" className={styles.tool}>
+            GitHub <span aria-hidden="true">↗</span>
+          </a>
+        </nav>
+      </header>
+
+      {showExploreHint ? (
+        <p className={styles.explore}>
+          <span aria-hidden="true">✦</span> Odayı keşfet: kaydır ya da parlayan nesnelere tıkla
+        </p>
+      ) : null}
+
+      <div className={styles.bottom}>
+        <section className={styles.card} aria-live="polite" aria-atomic="true">
+          {busyCard ? (
+            <>
+              <p className={styles.kicker}>
+                {running ? "Sahne oynuyor" : activity === "gaming" ? "Mola modu" : "Dinlenme"}
+              </p>
+              <p className={styles.text}>{status || "…"}</p>
+              <div className={styles.actions}>
+                {running ? (
+                  <button type="button" className={styles.primary} onClick={onSkip}>
+                    Animasyonu atla <kbd>Esc</kbd>
+                  </button>
+                ) : (
+                  <button type="button" className={styles.primary} onClick={onReturn}>
+                    Masaya dön <kbd>Esc</kbd>
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className={styles.kicker}>
+                {String(regionIndex + 1).padStart(2, "0")} / {String(REGIONS.length).padStart(2, "0")}
+              </p>
+              <h2 className={styles.title}>{region.title}</h2>
+              <p className={styles.text}>{region.text}</p>
+            </>
+          )}
+        </section>
+
+        <nav className={styles.regions} aria-label="Oda bölgeleri">
+          <ul>
+            {REGIONS.map((r, i) => (
+              <li key={r.id}>
+                <button
+                  type="button"
+                  className={styles.region}
+                  aria-current={i === regionIndex ? "true" : undefined}
+                  onClick={() => onRegion(i)}
+                >
+                  <RegionIcon id={r.id} />
+                  <span>{r.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </>
+  );
+}
+
+export const RoomHud = memo(RoomHudImpl);
+
+/** Bölge düğmeleri için küçük piksel simgeler. */
+function RegionIcon({ id }: { id: RegionId }) {
+  const paths: Record<RegionId, string> = {
+    desk: "M2 6h12v2H2zM3 8h2v5H3zM11 8h2v5h-2zM5 2h6v3H5z",
+    shelves: "M2 4h12v1.5H2zM2 10h12v1.5H2zM3 1h2v3H3zM6 2h2v2H6zM4 7h2v3H4zM8 6h3v4H8z",
+    tv: "M2 2h12v8H2zM6 11h4v1.5H6zM4 13h8v1.5H4z",
+    bed: "M1 7h14v4H1zM1 4h2v3H1zM4 5h4v2H4zM1 11h2v2H1zM13 11h2v2h-2z",
+    room: "M8 1l7 4v6l-7 4-7-4V5zM8 3L3 6l5 3 5-3z",
+  };
+  return (
+    <svg className={styles.icon} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d={paths[id]} fill="currentColor" fillRule="evenodd" />
+    </svg>
+  );
+}

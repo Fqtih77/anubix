@@ -1,6 +1,14 @@
 services:
   web:
     build: .
+    env_file: .env.local
+    environment:
+      ANUBIX_DATA_DIR: /app/data
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
     ports:
-      - "3000:3000"
+      - "3005:3005"
+    volumes:
+      - anubix_data:/app/data
     restart: unless-stopped
+volumes:
+  anubix_data:

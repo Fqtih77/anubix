@@ -1,0 +1,171 @@
+/* Avatar animasyonları: hepsi transform tabanlı, böylece tarayıcı ucuz çizer. */
+
+.avatar {
+  pointer-events: none;
+}
+
+.shadow {
+  fill: rgb(58 40 80 / 0.16);
+}
+
+.figure {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: poseIn 200ms ease-out;
+}
+
+@keyframes poseIn {
+  from {
+    transform: scale(0.97, 0.93);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* --- Yürüme: bacaklar ve kollar ileri-geri, gövde hafifçe zıplar --- */
+.avatar[data-pose="walk"] .figure {
+  animation: bob 0.2s ease-in-out infinite alternate;
+}
+.avatar[data-pose="walk"] .legL,
+.avatar[data-pose="walk"] .armR {
+  animation: stepA 0.4s ease-in-out infinite;
+}
+.avatar[data-pose="walk"] .legR,
+.avatar[data-pose="walk"] .armL {
+  animation: stepB 0.4s ease-in-out infinite;
+}
+
+@keyframes bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes stepA {
+  0%,
+  100% {
+    transform: translate(calc(var(--fx) * 0.26), calc(var(--fy) * 0.26 - 2px));
+  }
+  50% {
+    transform: translate(calc(var(--fx) * -0.26), calc(var(--fy) * -0.26));
+  }
+}
+
+@keyframes stepB {
+  0%,
+  100% {
+    transform: translate(calc(var(--fx) * -0.26), calc(var(--fy) * -0.26));
+  }
+  50% {
+    transform: translate(calc(var(--fx) * 0.26), calc(var(--fy) * 0.26 - 2px));
+  }
+}
+
+/* --- Otururken nefes alma --- */
+.figure[data-seated="true"] .body,
+.figure[data-seated="true"] .head {
+  animation: breathe 4.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.4px);
+  }
+}
+
+/* --- Klavyede yazma --- */
+.avatar[data-pose="type"] .armL {
+  animation: tap 0.34s ease-in-out infinite alternate;
+}
+.avatar[data-pose="type"] .armR {
+  animation: tap 0.34s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes tap {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2.2px);
+  }
+}
+
+/* --- El sallama --- */
+.avatar[data-pose="wave"] .armL {
+  animation: wave 0.32s ease-in-out infinite alternate;
+}
+
+@keyframes wave {
+  from {
+    transform: translate(-3px, 1px);
+  }
+  to {
+    transform: translate(4px, -2px);
+  }
+}
+
+/* --- Gerinme --- */
+.avatar[data-pose="stretch"] .armL,
+.avatar[data-pose="stretch"] .armR {
+  animation: reachUp 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes reachUp {
+  from {
+    transform: translateY(2px);
+  }
+  to {
+    transform: translateY(-3px);
+  }
+}
+
+/* --- Raftan alma --- */
+.avatar[data-pose="reach"] .armR {
+  animation: reachUp 0.45s ease-in-out infinite alternate;
+}
+
+/* --- Pufta oyun oynarken --- */
+.avatar[data-pose="lounge"] .head {
+  animation: groove 0.9s ease-in-out infinite alternate;
+}
+.avatar[data-pose="lounge"] .armL {
+  animation: tap 0.28s ease-in-out infinite alternate;
+}
+.avatar[data-pose="lounge"] .armR {
+  animation: tap 0.4s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes groove {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2.4px);
+  }
+}
+
+/* --- Göz kırpma --- */
+.eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 5.4s infinite;
+}
+
+@keyframes blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.12);
+  }
+}

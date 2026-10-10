@@ -1,0 +1,680 @@
+/*
+ * Oda sahnesinin animasyonları.
+ * Kurallar: yalnızca transform / opacity (ve birkaç renk geçişi), uzun ve sakin döngüler.
+ * `.ambient` sınıfı taşıyan arka plan hareketleri, bir eyleme odaklanınca (`data-calm`) durur.
+ */
+
+.scene {
+  display: block;
+  overflow: visible;
+  user-select: none;
+}
+
+.scene[data-calm="true"] .ambient {
+  animation-play-state: paused;
+}
+
+/* ---------- Giriş: ışıklar ve ekranlar sırayla açılır ---------- */
+
+.bulb {
+  fill: #ece4da;
+  transition: fill 0.35s ease calc(var(--i) * 35ms + 0.45s);
+}
+.bulbGlow {
+  opacity: 0;
+  transition: opacity 0.5s ease calc(var(--i) * 35ms + 0.45s);
+}
+.scene:not([data-intro="pending"]) .bulb {
+  fill: #ffe6a1;
+}
+.scene:not([data-intro="pending"]) .bulbGlow {
+  opacity: 1;
+}
+
+.twinkle {
+  animation: twinkle 7s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.9s);
+}
+
+@keyframes twinkle {
+  0%,
+  86%,
+  100% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.45;
+  }
+  94% {
+    opacity: 0.9;
+  }
+}
+
+.screenOn {
+  transition: opacity 0.45s ease;
+}
+.scene[data-intro="pending"] .screenOn {
+  opacity: 0;
+}
+.scene[data-intro="playing"] [data-screen="left"] .screenOn {
+  transition-delay: 0.7s;
+}
+.scene[data-intro="playing"] [data-screen="main"] .screenOn {
+  transition-delay: 0.95s;
+}
+.scene[data-intro="playing"] [data-screen="vertical"] .screenOn {
+  transition-delay: 1.2s;
+}
+
+.backGlow,
+.lightCone,
+.lampGlow {
+  transition: opacity 0.8s ease 1s;
+}
+.scene[data-intro="pending"] .backGlow,
+.scene[data-intro="pending"] .lightCone,
+.scene[data-intro="pending"] .lampGlow {
+  opacity: 0;
+}
+
+.screenGlare {
+  pointer-events: none;
+}
+
+/* ---------- Üzerine gelme / odak vurgusu ---------- */
+
+.screenHot {
+  stroke: #ffe29a;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+[data-hot="true"] .screenHot {
+  opacity: 1;
+}
+
+.case {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.case[data-taken="true"] {
+  opacity: 0;
+  transform: translate(6px, -10px);
+}
+.disc {
+  transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.case[data-hot="true"] .disc {
+  transform: translateY(-22px);
+}
+.case[data-hot="true"] {
+  filter: drop-shadow(0 0 6px rgb(255 226 154 / 0.95));
+}
+
+.coverMark {
+  font-family: var(--font-pixel), monospace;
+  font-size: 96px;
+  font-weight: 700;
+}
+.coverText {
+  font-family: var(--font-pixel), monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.coverIndex {
+  font-family: var(--font-pixel), monospace;
+  font-size: 18px;
+}
+
+.bed[data-hot="true"],
+.tvUnit[data-hot="true"] {
+  filter: drop-shadow(0 0 8px rgb(255 226 154 / 0.85));
+}
+
+/* ---------- Pencere ve gökyüzü: yavaş gün döngüsü ---------- */
+
+.skyTop {
+  stop-color: #9fd3ff;
+  animation: skyTop 90s ease-in-out infinite;
+}
+.skyBottom {
+  stop-color: #e8f5ff;
+  animation: skyBottom 90s ease-in-out infinite;
+}
+
+@keyframes skyTop {
+  0%,
+  100% {
+    stop-color: #9fd3ff;
+  }
+  40% {
+    stop-color: #8fc6ff;
+  }
+  65% {
+    stop-color: #b9a6f2;
+  }
+  80% {
+    stop-color: #c7b3f5;
+  }
+}
+
+@keyframes skyBottom {
+  0%,
+  100% {
+    stop-color: #e8f5ff;
+  }
+  40% {
+    stop-color: #fff1d6;
+  }
+  65% {
+    stop-color: #ffc9b5;
+  }
+  80% {
+    stop-color: #ffd9c4;
+  }
+}
+
+.sun {
+  animation: sunDrift 90s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes sunDrift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  65% {
+    transform: translate(-60px, 120px);
+  }
+}
+
+.clouds {
+  animation: clouds 80s linear infinite;
+}
+
+@keyframes clouds {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-560px);
+  }
+}
+
+.curtain {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: curtain 7s ease-in-out infinite;
+}
+
+@keyframes curtain {
+  0%,
+  100% {
+    transform: skewX(0deg);
+  }
+  50% {
+    transform: skewX(1.6deg);
+  }
+}
+
+.lightShaft {
+  animation: shaft 90s ease-in-out infinite;
+}
+
+@keyframes shaft {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  40% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.45;
+  }
+}
+
+/* ---------- Bitkiler ---------- */
+
+.sway,
+.plantSway,
+.vine {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sway 6.5s ease-in-out infinite;
+}
+.vine {
+  transform-origin: 50% 0;
+  animation-duration: 8s;
+}
+.plantSway {
+  animation-duration: 9s;
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(2.2deg);
+  }
+}
+
+/* ---------- Masa üstü ---------- */
+
+.steam {
+  animation: steam 4.5s ease-in-out infinite;
+}
+
+@keyframes steam {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  30% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+.deskCase {
+  animation: dropIn 0.35s ease-out;
+}
+
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+.figurine {
+  animation: hop 11s ease-in-out infinite;
+}
+
+@keyframes hop {
+  0%,
+  90%,
+  100% {
+    transform: translateY(0);
+  }
+  93% {
+    transform: translateY(-6px);
+  }
+  96% {
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Bilgisayar kasası ---------- */
+
+.pcGlowStop {
+  stop-color: var(--pc-glow);
+}
+.pcSlot {
+  fill: #48425e;
+  transition: fill 0.3s ease;
+}
+.pc[data-loaded="true"] .pcSlot {
+  fill: var(--pc-glow);
+}
+.pcLed {
+  fill: #c7c2d6;
+}
+.pc[data-loaded="true"] .pcLed {
+  fill: var(--pc-glow);
+}
+.fanRing {
+  fill: none;
+  stroke: var(--pc-glow);
+  stroke-width: 5;
+  opacity: 0.85;
+}
+.fan {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin 5s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Sandalye ---------- */
+
+.chair {
+  transition: transform 0.45s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+/* ---------- Ekran içerikleri ---------- */
+
+.screenTitle {
+  font-family: var(--font-pixel), monospace;
+  font-size: 34px;
+  font-weight: 700;
+}
+.screenTitleSm {
+  font-family: var(--font-pixel), monospace;
+  font-size: 22px;
+  font-weight: 700;
+}
+.screenSmall {
+  font-family: var(--font-pixel), monospace;
+  font-size: 13px;
+}
+
+.codeScroll {
+  animation: codeScroll 26s linear infinite;
+}
+
+@keyframes codeScroll {
+  to {
+    transform: translateY(-182px);
+  }
+}
+
+.saverFloat {
+  animation: saverFloat 6s ease-in-out infinite;
+}
+
+@keyframes saverFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.bootBar {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: bootBar 0.8s ease-out forwards;
+}
+
+@keyframes bootBar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.blink,
+.cursorBlink {
+  animation: blink 1.1s steps(2, jump-none) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.keyHint {
+  opacity: 0.12;
+  animation: keyHint 9s ease-in-out infinite;
+}
+
+@keyframes keyHint {
+  0%,
+  70%,
+  100% {
+    opacity: 0.12;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  88% {
+    opacity: 0.25;
+  }
+}
+
+.mouseCursor {
+  animation: mouseMove 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes mouseMove {
+  from {
+    transform: translate(30px, 250px);
+  }
+  to {
+    transform: translate(62px, 168px);
+  }
+}
+
+.clickFlash {
+  opacity: 0;
+  animation: flash 0.5s ease-out 0.8s forwards;
+}
+
+@keyframes flash {
+  30% {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+/* ---------- Televizyon ---------- */
+
+.consoleLight {
+  fill: #d6d1e4;
+  transition: fill 0.4s ease;
+}
+.consoleLight[data-on="true"] {
+  fill: #a68cf3;
+}
+
+.tvTitle {
+  font-family: var(--font-pixel), monospace;
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: 6px;
+}
+.tvLabel {
+  font-family: var(--font-pixel), monospace;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.tvLogo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tvLogo 1.1s ease-out both;
+}
+
+@keyframes tvLogo {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.tvClouds {
+  animation: tvScroll 30s linear infinite;
+}
+.tvHills {
+  animation: tvScroll 16s linear infinite;
+}
+.tvGround {
+  animation: tvGround 1.6s linear infinite;
+}
+
+@keyframes tvScroll {
+  to {
+    transform: translateX(-560px);
+  }
+}
+
+@keyframes tvGround {
+  to {
+    transform: translateX(-96px);
+  }
+}
+
+.runner {
+  animation: runBob 0.3s steps(2, jump-none) infinite;
+}
+.runLegA {
+  animation: runLeg 0.3s steps(2, jump-none) infinite;
+}
+.runLegB {
+  animation: runLeg 0.3s steps(2, jump-none) infinite reverse;
+}
+
+@keyframes runBob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes runLeg {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.eqBar {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: eq 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes eq {
+  from {
+    transform: scaleY(0.2);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.pickup {
+  animation: dropIn 0.3s ease-out;
+}
+
+.beanBag {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.beanBag[data-occupied="true"] {
+  transform: scale(1.05, 0.9);
+}
+.beanBag[data-hot="true"] {
+  filter: drop-shadow(0 0 8px rgb(255 226 154 / 0.9));
+}
+
+/* ---------- Yatak ---------- */
+
+.sleeper {
+  animation: dropIn 0.4s ease-out;
+}
+
+.breathe {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: breathe 3.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% {
+    transform: scaleY(1.06);
+  }
+}
+
+.zzz {
+  font-family: var(--font-pixel), monospace;
+  font-size: 22px;
+  font-weight: 700;
+  fill: #8b7cf6;
+  opacity: 0;
+  animation: zzz 2.1s ease-out infinite;
+}
+
+@keyframes zzz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 6px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -26px);
+  }
+}
+
+.lampShade {
+  fill: #fff2d9;
+  transition: fill 0.8s ease 1s;
+}
+.scene[data-intro="pending"] .lampShade {
+  fill: #f1e8dc;
+}
+
+/* ---------- Duvar süsleri ---------- */
+
+.decorText {
+  font-family: var(--font-pixel), monospace;
+  font-size: 15px;
+  font-weight: 700;
+}
+.decorTitle {
+  font-family: var(--font-pixel), monospace;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.neonText {
+  font-family: var(--font-body), sans-serif;
+  font-size: 64px;
+  font-weight: 800;
+  fill: none;
+  stroke: #c1a9ff;
+  stroke-width: 4px;
+}
+
+.neon {
+  animation: neon 13s linear infinite;
+}
+
+@keyframes neon {
+  0%,
+  91%,
+  95%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.35;
+  }
+  93% {
+    opacity: 0.95;
+  }
+  94% {
+    opacity: 0.5;
+  }
+}

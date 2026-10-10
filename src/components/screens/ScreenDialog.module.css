@@ -1,0 +1,45 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+
+.dialog::backdrop {
+  background: transparent;
+}
+
+.surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform-origin: 0 0;
+  background: #141022;
+  will-change: transform;
+}
+
+.content {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Geçişin başında içerik, monitördeki ekran gibi düz renktedir. */
+.veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.22), transparent 55%),
+    var(--veil);
+  pointer-events: none;
+  opacity: 0;
+}

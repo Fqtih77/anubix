@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3005",
     "build": "next build",
-    "start": "next start",
+    "start": "PORT=3005 node .next/standalone/server.js",
+    "setup": "node scripts/setup.mjs",
     "lint": "biome lint src next.config.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -22,6 +23,6 @@
     "typescript": "^5.0.0"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22.13.0"
   }
 }

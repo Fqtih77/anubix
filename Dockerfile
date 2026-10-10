@@ -13,12 +13,13 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3005
 ENV HOSTNAME=0.0.0.0
-RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
+RUN addgroup -S nextjs && adduser -S nextjs -G nextjs && mkdir /app/data && chown nextjs:nextjs /app/data
 COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
 USER nextjs
-EXPOSE 3000
+EXPOSE 3005
+VOLUME /app/data
 CMD ["node", "server.js"]
