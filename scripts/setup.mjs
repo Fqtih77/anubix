@@ -1,11 +1,12 @@
 import { randomBytes, scryptSync } from "node:crypto";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, appendFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
 const target = new URL("../.env.local", import.meta.url);
-if (existsSync(target)) {
-  console.error(".env.local zaten var. Mevcut ayarlar korunuyor; değiştirmek için dosyayı bilinçli olarak düzenle.");
+const existing = existsSync(target) ? readFileSync(target, "utf8") : "";
+if (/^ANUBIX_ADMIN_(?:USERNAME|PASSWORD_HASH)=/m.test(existing)) {
+  console.error("Yönetici hesabı zaten ayarlı. Mevcut ayarlar korunuyor.");
   process.exit(1);
 }
 const rl = createInterface({ input: stdin, output: stdout });
@@ -37,5 +38,10 @@ if (!/^[a-zA-Z0-9_.-]{3,40}$/.test(username) || password.length < 12 || password
 }
 const salt = randomBytes(16);
 const hash = scryptSync(password, salt, 64).toString("hex");
-writeFileSync(target, `ANUBIX_ADMIN_USERNAME=${username}\nANUBIX_ADMIN_PASSWORD_HASH=${salt.toString("hex")}:${hash}\nANUBIX_HTTPS=false\n# OLLAMA_BASE_URL=http://127.0.0.1:11434\n# OLLAMA_MODEL=\n# RESEND_API_KEY=\n# ANUBIX_MAIL_FROM=Anubix <hatirlatma@bildirim.anubix.dev>\n# ANUBIX_MAIL_TO=\n# ANUBIX_MAIL_TIME_ZONE=Europe/Istanbul\n# ANUBIX_MAIL_HOUR=9\n`, { mode: 0o600, flag: "wx" });
-console.log(".env.local oluşturuldu. Parola yalnızca hash olarak kaydedildi.");
+const adminSettings = `ANUBIX_ADMIN_USERNAME=${username}\nANUBIX_ADMIN_PASSWORD_HASH=${salt.toString("hex")}:${hash}\n`;
+if (existsSync(target)) {
+  appendFileSync(target, `${existing.endsWith("\n") ? "" : "\n"}${adminSettings}`, { mode: 0o600 });
+} else {
+  writeFileSync(target, `${adminSettings}ANUBIX_HTTPS=false\n# OLLAMA_BASE_URL=http://127.0.0.1:11434\n# OLLAMA_MODEL=\n# RESEND_API_KEY=\n# ANUBIX_MAIL_FROM=Anubix <hatirlatma@bildirim.anubix.dev>\n# ANUBIX_MAIL_TO=\n# ANUBIX_MAIL_TIME_ZONE=Europe/Istanbul\n# ANUBIX_MAIL_HOUR=9\n`, { mode: 0o600, flag: "wx" });
+}
+console.log("Yönetici hesabı .env.local dosyasına eklendi. Parola yalnızca hash olarak kaydedildi.");

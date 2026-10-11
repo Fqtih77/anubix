@@ -57,7 +57,7 @@ Gerekenler: Node.js 22.13+ ve npm. Komutları depo kökünde çalıştır:
 
 ```bash
 npm ci
-npm run setup  # Yönetici kullanıcı adı ve parolasını belirler; .env.local oluşturur
+npm run setup  # Yönetici hesabını kurar; .env.local yoksa oluşturur
 npm run dev
 ```
 
@@ -73,7 +73,7 @@ npm run start      # Derlenmiş uygulamayı 3005'te başlatır; önce build gere
 npm run test:mail  # Günlük e-posta özeti ve tekrar gönderim testleri
 ```
 
-`npm ci`, `package-lock.json` içindeki sürümleri kullanır. Yeni paket eklerken `npm install paket-adi` komutunu kullan ve hem `package.json` hem `package-lock.json` değişikliklerini commit et. `npm run setup` parolayı terminalde gizli alır ve yalnızca scrypt hash değerini `.env.local` içine yazar. Bu dosyayı Git’e ekleme.
+`npm ci`, `package-lock.json` içindeki sürümleri kullanır. Yeni paket eklerken `npm install paket-adi` komutunu kullan ve hem `package.json` hem `package-lock.json` değişikliklerini commit et. `npm run setup` parolayı terminalde gizli alır ve yalnızca scrypt hash değerini `.env.local` içine yazar. Dosyada önceden e-posta ayarları varsa onları koruyarak yönetici hesabını ekler. Bu dosyayı Git’e ekleme.
 
 > Not: Yazı tipleri `next/font/google` ile **derleme sırasında** indirilir. `npm run build` ve Docker derlemesi için internet bağlantısı gerekir; ziyaretçinin tarayıcısı Google'a istek atmaz.
 
