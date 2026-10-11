@@ -76,9 +76,9 @@ async function walkBackAndSit(d: Director, from: "left" | "right") {
   await sitDown(d);
 }
 
-/** Oyunu bırakır: TV kapanır, kulaklık ve kumanda sehpaya döner, avatar pufun yanında kalkar. */
+/** Oyunu bırakır: TV'de yarış ön izlemesi kalır, kulaklık ve kumanda sehpaya döner. */
 async function leaveGaming(d: Director) {
-  d.room({ tv: "off", headphonesOnTable: true, controllerOnTable: true });
+  d.room({ tv: "chill", headphonesOnTable: true, controllerOnTable: true });
   d.avatar({ pose: "stand", pos: SPOTS.beanSide, facing: "+x", headphones: false, moveMs: 0 });
   await d.wait(260);
 }

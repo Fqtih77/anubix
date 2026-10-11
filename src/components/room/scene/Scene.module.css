@@ -510,63 +510,27 @@
   }
 }
 
-.tvClouds {
-  animation: tvScroll 30s linear infinite;
-}
-.tvHills {
-  animation: tvScroll 16s linear infinite;
-}
-.tvGround {
-  animation: tvGround 1.6s linear infinite;
+.tvRaceMotion {
+  animation: tvRaceMotion 0.9s linear infinite;
 }
 
-@keyframes tvScroll {
-  to {
-    transform: translateX(-560px);
-  }
+@keyframes tvRaceMotion {
+  to { transform: translateY(70px); }
 }
 
-@keyframes tvGround {
-  to {
-    transform: translateX(-96px);
-  }
+.tvRaceRival {
+  animation: tvRaceRival 2.2s linear infinite;
 }
 
-.runner {
-  animation: runBob 0.3s steps(2, jump-none) infinite;
-}
-.runLegA {
-  animation: runLeg 0.3s steps(2, jump-none) infinite;
-}
-.runLegB {
-  animation: runLeg 0.3s steps(2, jump-none) infinite reverse;
+.tvRaceRivalSecond {
+  animation: tvRaceRival 2.2s linear infinite -1.1s;
 }
 
-@keyframes runBob {
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-@keyframes runLeg {
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-.eqBar {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: eq 0.9s ease-in-out infinite alternate;
-}
-
-@keyframes eq {
-  from {
-    transform: scaleY(0.2);
-  }
-  to {
-    transform: scaleY(1);
-  }
+@keyframes tvRaceRival {
+  from { transform: translateY(-110px); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  to { transform: translateY(240px); opacity: 0; }
 }
 
 .pickup {

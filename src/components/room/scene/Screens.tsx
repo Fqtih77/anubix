@@ -162,7 +162,22 @@ export function VerticalScreen({ state }: { state: VerticalScreenState }) {
   );
 }
 
-/* ---------- Televizyon: mola modu ---------- */
+/* ---------- Televizyon: yarış oyununun oda içi ön izlemesi ---------- */
+
+function PreviewCar({ x, y, color }: { x: number; y: number; color: string }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <rect x={-18} y={-20} width={8} height={17} fill="#0b1120" />
+      <rect x={10} y={-20} width={8} height={17} fill="#0b1120" />
+      <rect x={-18} y={10} width={8} height={17} fill="#0b1120" />
+      <rect x={10} y={10} width={8} height={17} fill="#0b1120" />
+      <path d="M0 -30 L8 -14 L10 17 L15 22 L-15 22 L-10 17 L-8 -14 Z" fill={color} />
+      <rect x={-20} y={23} width={40} height={5} fill="#0b1120" />
+      <rect x={-14} y={-26} width={28} height={5} fill="#0b1120" />
+      <ellipse cy={0} rx={6} ry={9} fill="#10172a" />
+    </g>
+  );
+}
 
 export function TvScreen({ state }: { state: TvState }) {
   const { w, h } = size("tv");
@@ -182,59 +197,26 @@ export function TvScreen({ state }: { state: TvState }) {
   }
   return (
     <g>
-      <rect width={w} height={h} fill="url(#rm-tv-sky)" />
-      <circle cx={w * 0.72} cy={h * 0.42} r={38} fill="#ffe7a8" />
-      <g className={`${styles.tvClouds}`}>
-        <rect x={60} y={50} width={70} height={14} fill="#ffffff" opacity={0.8} />
-        <rect x={76} y={40} width={36} height={12} fill="#ffffff" opacity={0.8} />
-        <rect x={320} y={70} width={90} height={14} fill="#ffffff" opacity={0.7} />
-        <rect x={610} y={46} width={70} height={14} fill="#ffffff" opacity={0.8} />
-      </g>
-      <g className={styles.tvHills}>
-        {Array.from({ length: 16 }, (_, i) => i * 70).map((x, i) => (
-          <rect key={x} x={x} y={h - 110 - ((i * 37) % 4) * 14} width={70} height={140} fill={i % 2 ? "#7fbf8f" : "#8fcf9a"} />
-        ))}
-      </g>
-      <g className={styles.tvGround}>
-        {Array.from({ length: 24 }, (_, i) => i * 48).map((x, i) => (
-          <g key={x}>
-            <rect x={x} y={h - 52} width={48} height={52} fill={i % 2 ? "#a77b56" : "#b88a62"} />
-            <rect x={x} y={h - 58} width={48} height={10} fill={i % 2 ? "#6cbf6c" : "#7ccf72"} />
+      <rect width={w} height={h} fill="#102634" />
+      <rect x={w * 0.16} width={w * 0.68} height={h} fill="#2d3d57" />
+      <rect x={w * 0.16 + 8} width={w * 0.68 - 16} height={h} fill="#34445e" />
+      <g className={`${styles.tvRaceMotion} ${styles.ambient}`}>
+        {Array.from({ length: 9 }, (_, i) => i).map((i) => (
+          <g key={i} transform={`translate(0 ${i * 70 - 90})`}>
+            <rect x={w * 0.16} width={8} height={35} fill={i % 2 ? "#f6eee4" : "#ef615e"} />
+            <rect x={w * 0.84 - 8} width={8} height={35} fill={i % 2 ? "#f6eee4" : "#ef615e"} />
+            <rect x={w * 0.39} width={3} height={35} fill="#d8dce4" opacity={0.75} />
+            <rect x={w * 0.61} width={3} height={35} fill="#d8dce4" opacity={0.75} />
           </g>
         ))}
       </g>
-      {/* Koşan küçük blok karakter */}
-      <g transform={`translate(${w * 0.3} ${h - 96})`}>
-        <g className={styles.runner}>
-          <rect x={0} y={0} width={26} height={24} fill="#f3c5a4" />
-          <rect x={0} y={0} width={26} height={8} fill="#3d3246" />
-          <rect x={17} y={11} width={4} height={5} fill="#2d2640" />
-          <rect x={2} y={24} width={22} height={18} fill="#7fd0ad" />
-          <rect className={styles.runLegA} x={4} y={42} width={7} height={10} fill="#4c5175" />
-          <rect className={styles.runLegB} x={15} y={42} width={7} height={10} fill="#4c5175" />
-        </g>
-      </g>
-      <text x={18} y={34} className={styles.tvLabel} fill="#ffffff">
-        MOLA MODU
-      </text>
-      <text x={18} y={58} className={styles.screenSmall} fill="#ffffffcc">
-        ♪ lo-fi · kulaklık takılı
-      </text>
-      <g transform={`translate(${w - 110} ${h - 24})`}>
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <rect
-            key={i}
-            className={styles.eqBar}
-            x={i * 16}
-            y={-40}
-            width={10}
-            height={40}
-            fill="#ffffff"
-            opacity={0.85}
-            style={{ animationDelay: `${i * -0.17}s` }}
-          />
-        ))}
-      </g>
+      <g className={`${styles.tvRaceRival} ${styles.ambient}`}><PreviewCar x={w * 0.39} y={h * 0.25} color="#ffd36e" /></g>
+      <g className={`${styles.tvRaceRivalSecond} ${styles.ambient}`}><PreviewCar x={w * 0.61} y={h * 0.6} color="#75c6ee" /></g>
+      <PreviewCar x={w * 0.5} y={h * 0.76} color="#f35b55" />
+      <rect x={12} y={10} width={163} height={37} rx={5} fill="#10172a" opacity={0.92} />
+      <text x={20} y={34} className={styles.tvLabel} fill="#ffffff">PIT LANE SPRINT</text>
+      <circle cx={w - 31} cy={28} r={17} fill="#80e2d4" />
+      <path d={`M${w - 28} 15 l-9 15 h7 l-4 13 13-18 h-8 l5-10Z`} fill="#123647" />
     </g>
   );
 }

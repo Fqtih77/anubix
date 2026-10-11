@@ -47,7 +47,7 @@ export const DESK_ROOM: RoomProps = {
   loadedProject: null,
   mainScreen: "saver",
   verticalScreen: "saver",
-  tv: "off",
+  tv: "chill",
   headphonesOnTable: true,
   controllerOnTable: true,
   sleeping: false,

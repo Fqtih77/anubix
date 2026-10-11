@@ -18,7 +18,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  width: min(100%, 760px);
+  width: min(100%, 1600px);
   margin: 0 auto;
 }
 
@@ -59,7 +59,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  width: min(100%, 760px);
+  width: min(100%, 1600px);
   margin: 12px auto 8px;
   font-size: 11px;
   font-weight: 900;
@@ -87,16 +87,17 @@
 .playArea {
   display: flex;
   justify-content: center;
+  align-items: center;
   flex: 1;
   min-height: 0;
 }
 
 .track {
   position: relative;
-  width: auto;
-  height: 100%;
+  width: min(100%, 1600px, calc(177.78dvh - 365px));
+  height: auto;
   max-width: 100%;
-  aspect-ratio: 5 / 8;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 3px solid #7a8da5;
   border-radius: 16px;
@@ -120,7 +121,7 @@
 }
 
 .overlayCard {
-  width: min(100%, 300px);
+  width: min(100%, 370px);
   padding: 23px 20px;
   border: 1px solid #a5b7c9;
   border-radius: 18px;
@@ -172,7 +173,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  width: min(100%, 540px);
+  width: min(100%, 1600px);
   min-height: 72px;
   margin: 6px auto 0;
 }
@@ -198,11 +199,47 @@
   user-select: none;
 }
 
+.turboButton {
+  min-width: 122px;
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid #80e2d4;
+  border-radius: 16px;
+  background: #176d68;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.turboButton span {
+  display: inline-block;
+  min-width: 20px;
+  margin-left: 5px;
+  border-radius: 99px;
+  background: #d4fff4;
+  color: #164643;
+}
+
+.turboButton:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.turboButton:not(:disabled):hover,
+.turboButton:not(:disabled):focus-visible {
+  background: #238c83;
+}
+
+.dashboard strong.turboOn {
+  color: #8df3dc;
+}
+
 .mobileHint {
   display: none;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .game {
     padding-right: 10px;
     padding-left: 10px;
@@ -219,7 +256,16 @@
   .dashboard {
     gap: 4px;
     margin-top: 10px;
-    font-size: 9px;
+    font-size: 8px;
+  }
+
+  .dashboard strong { font-size: 12px; }
+
+  .track {
+    width: auto;
+    height: 100%;
+    max-height: calc(160vw - 32px);
+    aspect-ratio: 5 / 8;
   }
 
   .footer {
@@ -231,8 +277,10 @@
   }
 
   .steer {
-    flex-basis: 66px;
+    flex-basis: 58px;
   }
+
+  .turboButton { min-width: 80px; min-height: 48px; padding: 0 6px; font-size: 12px; }
 
   .mobileHint {
     display: inline;
