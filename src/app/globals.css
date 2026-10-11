@@ -16,6 +16,38 @@
   --mint-soft: #d4f3e6;
   --butter: #ffe29a;
   --focus: #6b55e8;
+  /* Yüzeyler: kartlar, yarı saydam düğmeler, ince çizgiler */
+  --surface: #ffffff;
+  --surface-glass: rgb(255 255 255 / 0.82);
+  --surface-strong: rgb(255 255 255 / 0.92);
+  --line: rgb(58 40 80 / 0.08);
+  /* Dolu düğmeler (koyu zemin, açık yazı) */
+  --solid: #2d2640;
+  --solid-ink: #ffffff;
+  --solid-shadow: #17121f;
+  --solid-accent: #ffe29a;
+  --mint-ink: #1d5a43;
+}
+
+/* Odadaki ışık düğmesi kapatılınca: gece teması */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #efeaff;
+  --ink-soft: #b9b0d6;
+  --paper: #15122a;
+  --lilac-deep: #b6a6ff;
+  --lilac-soft: #3b3470;
+  --mint-soft: #1d4a3c;
+  --focus: #b6a6ff;
+  --surface: #221d3c;
+  --surface-glass: rgb(36 31 64 / 0.86);
+  --surface-strong: rgb(36 31 64 / 0.94);
+  --line: rgb(255 255 255 / 0.1);
+  --solid: #ffe29a;
+  --solid-ink: #231c3b;
+  --solid-shadow: #b8963f;
+  --solid-accent: #6b55e8;
+  --mint-ink: #9fe0c4;
 }
 
 * {
@@ -35,6 +67,9 @@ body {
   min-height: 100vh;
   background: var(--paper);
   color: var(--ink);
+  transition:
+    background-color 0.7s ease,
+    color 0.7s ease;
   font-family: var(--font-body), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }

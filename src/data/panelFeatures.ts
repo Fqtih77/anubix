@@ -4,7 +4,7 @@
  * Panel haritasındaki her yapı oturumla korunan bir özelliğe karşılık gelir.
  */
 
-export type PanelFeatureId = "storage" | "notes" | "quests" | "calendar" | "assistant";
+export type PanelFeatureId = "storage" | "notes" | "quests" | "calendar" | "assistant" | "projects";
 
 export interface PanelFeature {
   id: PanelFeatureId;
@@ -65,5 +65,15 @@ export const panelFeatures: PanelFeature[] = [
     description: "Ollama üzerinden kendi bilgisayarımda çalışan modele bağlanan yardımcı karakter.",
     planned: ["Notlar ve görevlerle izinli çalışma"],
     color: "#6fd3b1",
+  },
+  {
+    id: "projects",
+    key: "6",
+    title: "Komut bloğu",
+    subtitle: "Proje yöneticisi",
+    description:
+      "Odadaki proje masaüstüne koda dokunmadan proje eklediğim, düzenlediğim, sıraladığım ve gizlediğim yer.",
+    planned: [],
+    color: "#e8892e",
   },
 ];

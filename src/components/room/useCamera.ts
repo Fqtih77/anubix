@@ -5,7 +5,7 @@
  * `translate + scale` dönüşümüdür. İki modu vardır:
  *
  *   scroll → sayfa kaydırıldıkça bölgeler arasında yumuşakça gezinir (kaydırma turu)
- *   shot   → bir senaryo kamerayı belirli bir çekime kilitlemiştir (ör. rafa yakın plan)
+ *   shot   → bir senaryo kamerayı belirli bir çekime kilitlemiştir (ör. plak duvarına yakın plan)
  *
  * Hesaplar React durumu kullanmaz; dönüşüm doğrudan DOM'a yazılır, böylece kaydırma
  * sırasında bileşenler yeniden çizilmez.
@@ -54,9 +54,9 @@ function frameBounds(frame: Frame) {
   return boundsOf(points.map(isoP));
 }
 
-/** Odanın (maket kaidesi dahil) tuvaldeki sınırları. */
+/** Odanın bütün köşeleri: yakın planları sınırlandırırken hiçbir köşe kaybolmamalı. */
 const ROOM_RECT = (() => {
-  const r = frameBounds(SHOTS.overview.wide);
+  const r = frameBounds(SHOTS.overview.tight);
   return { x: r.x + SCENE.originX, y: r.y + SCENE.originY, w: r.w, h: r.h };
 })();
 
@@ -79,7 +79,17 @@ function clampToRoom(cam: Cam, vp: Viewport): Cam {
   return { ...cam, cx, cy };
 }
 
+let fitCacheViewport = "";
+const fitCache = new Map<ShotId, Cam>();
+
 function fit(shot: ShotId, vp: Viewport): Cam {
+	const viewportKey = `${vp.w}:${vp.h}:${vp.top}:${vp.bottom}:${vp.side}:${vp.compact}`;
+	if (viewportKey !== fitCacheViewport) {
+		fitCacheViewport = viewportKey;
+		fitCache.clear();
+	}
+	const cached = fitCache.get(shot);
+	if (cached) return cached;
   const s = SHOTS[shot];
   const r = frameBounds(vp.compact ? s.tight : s.wide);
   const pad = s.pad ?? 1.05;
@@ -87,11 +97,11 @@ function fit(shot: ShotId, vp: Viewport): Cam {
   const availH = Math.max(120, vp.h - vp.top - vp.bottom);
   const byW = availW / (r.w * pad);
   const byH = availH / (r.h * pad);
-  // "contain": kadrajın tamamı görünür. Geniş ekranda `zoom` kadar daha yakınlaşılır,
-  // ama "cover"ı (kadrajın ekranı tam doldurduğu ölçek) geçmeyiz.
+  // Bölge durakları kadraja gerçekten yaklaşır. Etkileşim çekimleri kendi
+  // ölçeklerinde kalır; telefonda kırpılmayı sınırlamak için artışı azaltırız.
   const contain = Math.min(byW, byH);
-  const zoom = vp.compact ? 1 : (s.zoom ?? 1);
-  let k = Math.min(contain * zoom, Math.max(byW, byH));
+  const zoom = vp.compact ? Math.min(s.zoom ?? 1, 1.25) : (s.zoom ?? 1);
+  let k = contain * zoom;
   if (!vp.compact && s.fill !== false) {
     // Masaüstünde oda ekranın genişliğini doldursun (16:9 ekranda yanlarda boşluk kalmasın);
     // üst ve alt biraz kırpılabilir. Çok geniş ekranlarda en fazla 1.5 kat yakınlaşılır.
@@ -99,7 +109,9 @@ function fit(shot: ShotId, vp: Viewport): Cam {
     k = Math.max(k, Math.min(fillWidth, contain * 1.5));
   }
   k = clamp(k, 0.15, 4.5);
-  return clampToRoom({ cx: r.x + r.w / 2 + SCENE.originX, cy: r.y + r.h / 2 + SCENE.originY, k }, vp);
+	const cam = clampToRoom({ cx: r.x + r.w / 2 + SCENE.originX, cy: r.y + r.h / 2 + SCENE.originY, k }, vp);
+	fitCache.set(shot, cam);
+	return cam;
 }
 
 function mixCam(a: Cam, b: Cam, t: number): Cam {

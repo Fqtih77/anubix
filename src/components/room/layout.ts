@@ -83,37 +83,56 @@ export const PC_CASE = box(0.55, 0.45, 0, 1.25, 2.45, 2.7);
 export const CHAIR = { x: 7.35, y: 5.2, seatZ: 2.25 };
 export const CHAIR_ROLL = { x: 0.35, y: 1.3 };
 
-/* ---------- Proje rafları (sol duvar, x = 0) ---------- */
+/* ---------- Plak duvarı (sol duvar, x = 0) ---------- */
 
-export const SHELVES = {
-  boards: [box(0, 3.6, 5.2, 1.5, 6.0, 0.2), box(0, 3.6, 7.6, 1.5, 6.0, 0.2)],
-};
+export type RecordId = "cv" | "projects";
 
-export interface ShelfSlot {
-  /** Proje kutusunun kendisi */
-  case: Box3;
-  /** Avatarın kutuyu almak için durduğu yer */
+export interface RecordFrame {
+  id: RecordId;
+  /** Tablonun altındaki etiket */
+  label: string;
+  /** Kısa açıklama (erişilebilir ad ve ipucu için) */
+  hint: string;
+  /** Plak etiketinin, kasanın ışığının ve ekranın rengi */
+  color: string;
+  /** Duvara asılı tablo (kutu) */
+  frame: Box3;
+  /** Avatarın plağı almak için durduğu yer */
   stand: P3;
 }
 
-const CASE_SIZE = { thick: 0.3, w: 1.85, h: 2.0 };
+/**
+ * Duvardaki iki tablo; her birinde bir plak var. Plak bilgisayara takılınca
+ * "cv" → özgeçmiş ekranı, "projects" → proje masaüstü açılır.
+ */
+export const RECORDS: Record<RecordId, RecordFrame> = {
+  projects: {
+    id: "projects",
+    label: "PROJELER",
+    hint: "Proje masaüstünü aç",
+    color: "#8b7cf6",
+    frame: box(0, 3.55, 5.0, 0.24, 2.8, 2.8),
+    stand: [2.55, 4.95, 0],
+  },
+  cv: {
+    id: "cv",
+    label: "CV",
+    hint: "Özgeçmişi aç",
+    color: "#2563eb",
+    frame: box(0, 6.75, 5.0, 0.24, 2.8, 2.8),
+    stand: [2.55, 8.15, 0],
+  },
+};
 
-/** Raftaki proje yuvaları. Proje sayısı artarsa buraya yeni yuva ekle. */
-export const SHELF_SLOTS: ShelfSlot[] = [
-  { y: 3.95, board: 0 },
-  { y: 6.1, board: 0 },
-  { y: 3.95, board: 1 },
-  { y: 6.1, board: 1 },
-].map(({ y, board }) => {
-  const b = SHELVES.boards[board];
-  const caseBox = box(0.12, y, b.z + b.h, CASE_SIZE.thick, CASE_SIZE.w, CASE_SIZE.h);
-  return { case: caseBox, stand: [2.55, y + CASE_SIZE.w / 2, 0] as P3 };
-});
+export const RECORD_IDS: RecordId[] = ["projects", "cv"];
 
-/** Kutunun kapağı (+x yüzü) */
-export function caseCover(b: Box3): ScreenFace {
+/** Tablonun ön yüzü (+x yüzü, sol duvara paralel) */
+export function frameFace(b: Box3): ScreenFace {
   return { plane: "x", at: [b.x + b.w, b.y + b.d, b.z + b.h], w: b.d, h: b.h };
 }
+
+/** Yatağın yanındaki duvarda (sağ duvar) ışık düğmesi. */
+export const LIGHT_SWITCH = box(13.25, 0, 4.25, 0.5, 0.08, 0.78);
 
 /* ---------- Mola köşesi (sol duvar önü) ---------- */
 
@@ -183,10 +202,10 @@ export type ShotId =
   | "overview"
   | "intro"
   | "desk"
-  | "shelves"
+  | "records"
   | "tv"
   | "bed"
-  | "shelfAction"
+  | "recordAction"
   | "mainMonitor"
   | "verticalMonitor"
   | "tvAction"
@@ -219,52 +238,71 @@ export interface Shot {
 
 const WHOLE = box(-ROOM.wall, -ROOM.wall, -ROOM.floor, ROOM.w + ROOM.wall, ROOM.d + ROOM.wall, ROOM.h + ROOM.floor);
 
+/** Maketin kaidesi hariç oda: "Tüm oda" görünümünde oda biraz daha büyük dursun diye. */
+const ROOM_ONLY: P3[] = [
+  [-ROOM.wall, -ROOM.wall, ROOM.h],
+  [-ROOM.wall, ROOM.d, ROOM.h],
+  [ROOM.w, -ROOM.wall, ROOM.h],
+  [-ROOM.wall, ROOM.d, -0.4],
+  [ROOM.w, -ROOM.wall, -0.4],
+  [ROOM.w, ROOM.d, -0.5],
+];
+
 export const SHOTS: Record<ShotId, Shot> = {
-  overview: { wide: WHOLE, tight: WHOLE, pad: 1.02, fill: false },
-  intro: { wide: WHOLE, tight: WHOLE, pad: 1.25, fill: false },
-  /** Varsayılan görünüm: televizyondan pencereye kadar odanın tamamı, geniş ekranı dolduracak kadar yakın. */
+  /** İlk açılış ve "Tüm oda": odanın tamamı, kenarlarda boşluk bırakmadan biraz yakın. */
+  overview: { wide: ROOM_ONLY, tight: WHOLE, pad: 1, zoom: 1.12, fill: false },
+  intro: { wide: WHOLE, tight: WHOLE, pad: 1.3, fill: false },
+  /** Masa: monitörler, avatar ve bilgisayar kasası yakından ("Tüm oda"dan sonra ilk durak). */
   desk: {
     wide: [
-      [0.4, 16.5, 5],
-      [21.5, 0.5, 5],
-      [2.5, 0.5, 10.6],
-      [16.5, 12.5, 0],
+      [3.4, 0.4, 7.8],
+      [10.8, 0.4, 7.8],
+      [0.5, 3.2, 0],
+      [11, 6.6, 0],
+      [4.5, 7.2, 0],
     ],
     tight: box(1.6, -0.3, 0.5, 10.4, 7.6, 9.5),
-    zoom: 1.15,
+    zoom: 1.55,
   },
-  shelves: {
+  /** Plak duvarı: iki tablo ve önlerindeki zemin, tablolar okunacak kadar yakın. */
+  records: {
     wide: [
-      [0, 10.5, 1.5],
-      [9.2, 0.5, 4.5],
-      [0, 3.6, 10.2],
-      [7.5, 8.5, 0],
+      [0, 10, 8.6],
+      [0, 2.9, 8.8],
+      [0, 10, 2.4],
+      [3.2, 2.9, 0],
+      [3.2, 10, 0],
     ],
     tight: box(-0.6, 2.4, 0, 8.6, 8.4, 10.6),
-    zoom: 1.25,
+    zoom: 1.65,
   },
+  /** Mola köşesi: televizyon, sehpa ve puf. Geniş ekranda duvarın üstü biraz kırpılabilir. */
   tv: {
     wide: [
-      [0, 17.4, 7],
-      [13.2, 10.2, 1],
-      [0, 10.4, 10.5],
-      [12.5, 16.5, 0],
+      [0, 16.4, 7.6],
+      [0, 10.3, 7.6],
+      [0, 16.6, 0],
+      [12.1, 11.4, 2.3],
+      [10.3, 14.95, 0],
     ],
     tight: box(-0.6, 9.4, 0, 13.4, 8.2, 8.5),
-    zoom: 1.25,
+    pad: 1.04,
+    zoom: 1.55,
   },
+  /** Yatak köşesi: yatak, komodin, ışık düğmesi ve (gece manzarası görünsün diye) pencerenin tamamı. */
   bed: {
     wide: [
-      [11.5, 0.6, 2.5],
-      [22, 0, 10.6],
-      [14.3, 0, 11.2],
-      [16.8, 13.6, 0],
-      [22, 10.6, 0],
+      [15.2, 0, 10.4],
+      [21.5, 0, 10.4],
+      [12.5, 0.6, 2.4],
+      [15, 10.3, 0.5],
+      [21.1, 10.3, 1.4],
     ],
     tight: box(11.6, -0.6, 0, 11, 13.8, 10.6),
-    zoom: 1.25,
+    pad: 1.03,
+    zoom: 1.5,
   },
-  shelfAction: {
+  recordAction: {
     wide: [
       [0, 10, 1.5],
       [9.2, 0.5, 4.5],
@@ -311,7 +349,7 @@ export const SHOTS: Record<ShotId, Shot> = {
 
 /* ---------- Bölgeler (kaydırma turu, mobil gezinme) ---------- */
 
-export type RegionId = "desk" | "shelves" | "tv" | "bed" | "room";
+export type RegionId = "room" | "desk" | "records" | "tv" | "bed";
 
 export interface Region {
   id: RegionId;
@@ -322,7 +360,15 @@ export interface Region {
   shot: ShotId;
 }
 
+/** Kaydırma turunun sırası: sayfa açılınca bütün oda, aşağı kaydırdıkça bölgeler. */
 export const REGIONS: Region[] = [
+  {
+    id: "room",
+    label: "Tüm oda",
+    title: "Odanın tamamı",
+    text: "Kaydırarak masaya, plak duvarına, mola köşesine ve yatağa geç.",
+    shot: "overview",
+  },
   {
     id: "desk",
     label: "Masa",
@@ -331,11 +377,11 @@ export const REGIONS: Region[] = [
     shot: "desk",
   },
   {
-    id: "shelves",
-    label: "Raflar",
-    title: "Proje rafları",
-    text: "Her kutu bir proje. Birine tıkla; avatar alıp bilgisayara taksın.",
-    shot: "shelves",
+    id: "records",
+    label: "Plaklar",
+    title: "Plak duvarı",
+    text: "İki tablo, iki plak: CV ve projeler. Birine tıkla; avatar alıp bilgisayara taksın.",
+    shot: "records",
   },
   {
     id: "tv",
@@ -348,14 +394,7 @@ export const REGIONS: Region[] = [
     id: "bed",
     label: "Yatak",
     title: "Dinlenme köşesi",
-    text: "Yatağa tıkla; kısa bir şekerleme molası.",
+    text: "Yatağa tıkla; kısa bir şekerleme molası. Işık düğmesi de burada.",
     shot: "bed",
-  },
-  {
-    id: "room",
-    label: "Tüm oda",
-    title: "Odanın tamamı",
-    text: "Şimdilik oda bu kadar. Aşağıda animasyonsuz hızlı liste var.",
-    shot: "overview",
   },
 ];

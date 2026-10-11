@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PanelFeatureId } from "@/data/panelFeatures";
+import { api } from "./api";
 import styles from "./FeatureLive.module.css";
+import { ProjectsManager } from "./ProjectsManager";
 
 type Kind = "notes" | "quests" | "calendar";
 type Entry = {
@@ -16,16 +18,10 @@ type SavedFile = { id: string; name: string; size: number };
 type Message = { id: string; role: "user" | "assistant"; content: string };
 const localDate = (date: Date) => date.toLocaleDateString("sv-SE");
 
-async function api<T>(url: string, init?: RequestInit): Promise<T> {
-	const response = await fetch(url, { cache: "no-store", ...init });
-	const data = await response.json().catch(() => ({}));
-	if (!response.ok) throw new Error(data.error || "İşlem başarısız.");
-	return data as T;
-}
-
 export function FeatureLive({ id }: { id: PanelFeatureId }) {
 	if (id === "storage") return <Storage />;
 	if (id === "assistant") return <Assistant />;
+	if (id === "projects") return <ProjectsManager />;
 	return <Entries key={id} kind={id} />;
 }
 

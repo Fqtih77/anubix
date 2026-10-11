@@ -97,7 +97,7 @@ export const RoomHud = memo(RoomHudImpl);
 function RegionIcon({ id }: { id: RegionId }) {
   const paths: Record<RegionId, string> = {
     desk: "M2 6h12v2H2zM3 8h2v5H3zM11 8h2v5h-2zM5 2h6v3H5z",
-    shelves: "M2 4h12v1.5H2zM2 10h12v1.5H2zM3 1h2v3H3zM6 2h2v2H6zM4 7h2v3H4zM8 6h3v4H8z",
+    records: "M1 1h14v14H1zM2.5 2.5v11h11v-11zM6 4h4l2 2v4l-2 2H6L4 10V6zM7 7v2h2V7z",
     tv: "M2 2h12v8H2zM6 11h4v1.5H6zM4 13h8v1.5H4z",
     bed: "M1 7h14v4H1zM1 4h2v3H1zM4 5h4v2H4zM1 11h2v2H1zM13 11h2v2h-2z",
     room: "M8 1l7 4v6l-7 4-7-4V5zM8 3L3 6l5 3 5-3z",

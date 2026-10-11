@@ -3,13 +3,12 @@ import { IsoFace } from "@/components/iso/Iso";
 import { C } from "./palette";
 import styles from "./Scene.module.css";
 
-/** Duvarlardaki pano, poster ve neon tabela. Hepsi özgün, hiçbiri hazır görsel değil. */
+/** Duvarlardaki pano ve posterler. Hepsi özgün, hiçbiri hazır görsel değil. */
 export const WallDecor = memo(function WallDecor() {
   return (
     <g>
       <Pegboard />
       <IslandPoster />
-      <NeonSign />
       <GamePoster />
     </g>
   );
@@ -78,25 +77,6 @@ function IslandPoster() {
       <text x={w / 2} y={h - 22} textAnchor="middle" className={styles.decorTitle} fill={C.ink}>
         ANUBIX · 2026
       </text>
-    </IsoFace>
-  );
-}
-
-function NeonSign() {
-  return (
-    <IsoFace plane="x" at={[0.06, 3.3, 10.2]}>
-      <g className={`${styles.neon} ${styles.ambient}`} filter="url(#rm-neon)">
-        <text x={120} y={92} textAnchor="middle" className={styles.neonText}>
-          anubix
-        </text>
-        <path
-          d="M120,170 C80,140 76,112 98,106 C110,103 118,112 120,118 C122,112 130,103 142,106 C164,112 160,140 120,170 Z"
-          fill="none"
-          stroke="#ff9ec4"
-          strokeWidth={6}
-          strokeLinejoin="round"
-        />
-      </g>
     </IsoFace>
   );
 }

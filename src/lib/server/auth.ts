@@ -12,7 +12,12 @@ const COOKIE = "anubix_session";
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
 function hash(token: string) {
-	return createHash("sha256").update(token).digest("hex");
+	// Parola yenilenince eski oturumlar da geçersiz kalsın.
+	return createHash("sha256")
+		.update(process.env.ANUBIX_ADMIN_PASSWORD_HASH || "")
+		.update(":")
+		.update(token)
+		.digest("hex");
 }
 
 export function configured() {
@@ -39,6 +44,7 @@ export function validCredentials(username: string, password: string) {
 export async function createSession(request: Request) {
 	const token = randomBytes(32).toString("base64url");
 	const expiresAt = Date.now() + SESSION_SECONDS * 1000;
+	db().prepare("DELETE FROM sessions WHERE expires_at <= ?").run(Date.now());
 	db()
 		.prepare("INSERT INTO sessions (token_hash, expires_at) VALUES (?, ?)")
 		.run(hash(token), expiresAt);
@@ -52,6 +58,7 @@ export async function createSession(request: Request) {
 }
 
 export async function hasSession() {
+	if (!configured()) return false;
 	const token = (await cookies()).get(COOKIE)?.value;
 	if (!token) return false;
 	const row = db()

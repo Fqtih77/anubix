@@ -20,7 +20,7 @@ import { WorldMap } from "./WorldMap";
 const STAGES = [
   { at: 0, text: "Dünya oluşturuluyor…" },
   { at: 750, text: "Arazi şekillendiriliyor…" },
-  { at: 1500, text: "Sandıklar yerleştiriliyor…" },
+  { at: 1500, text: "Sandık ve komut bloğu yerleştiriliyor…" },
   { at: 2200, text: "Anubix dünyasına giriliyor…" },
 ];
 const GENERATION_MS = 2900;
@@ -59,10 +59,10 @@ export function PanelExperience({ features }: { features: PanelFeature[] }) {
 
   const skip = useCallback(() => setPhase("instant"), []);
 
-  // 1–5 tuşları özellik açar; dünya kurulurken Esc/Boşluk geçişi atlar.
+  // 1–6 tuşları özellik açar; dünya kurulurken Esc/Boşluk geçişi atlar.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLElement && event.target.closest("input, textarea")) return;
+      if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select")) return;
       if (phase === "building") {
         if (event.key === "Escape" || event.key === " ") {
           event.preventDefault();
@@ -127,7 +127,7 @@ export function PanelExperience({ features }: { features: PanelFeature[] }) {
         <p className={styles.hint}>
           {hotFeature
             ? `${hotFeature.title} · ${hotFeature.subtitle}`
-            : "Bir yapıya tıkla ya da 1–5 tuşlarını kullan"}
+            : `Bir yapıya tıkla ya da 1–${features.length} tuşlarını kullan`}
         </p>
       </nav>
 

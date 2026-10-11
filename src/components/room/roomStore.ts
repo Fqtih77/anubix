@@ -16,8 +16,14 @@ export type Activity = "desk" | "gaming" | "sleeping";
 /**
  * Tam ekran açılan katman. `direct: true` → sayfa altındaki listeden açıldı,
  * monitörden büyüme animasyonu olmadan gelir.
+ *   cv      → özgeçmiş ekranı (CV plağı)
+ *   desktop → proje masaüstü (Projeler plağı); `projectId` verilirse o proje açık gelir
  */
-export type Overlay = { kind: "project"; projectId: string; direct?: boolean } | { kind: "login"; direct?: boolean } | { kind: "game"; direct?: boolean };
+export type Overlay =
+  | { kind: "cv"; direct?: boolean }
+  | { kind: "desktop"; projectId?: string; direct?: boolean }
+  | { kind: "login"; direct?: boolean }
+  | { kind: "game"; direct?: boolean };
 
 export interface RoomState {
   avatar: AvatarState;
@@ -43,14 +49,15 @@ export const SEATED_AVATAR: AvatarState = {
 export const DESK_ROOM: RoomProps = {
   chairRolled: false,
   chairLayer: "backrest",
-  takenProject: null,
-  loadedProject: null,
+  takenRecord: null,
+  loadedRecord: null,
   mainScreen: "saver",
   verticalScreen: "saver",
   tv: "chill",
   headphonesOnTable: true,
   controllerOnTable: true,
   sleeping: false,
+  lights: "on",
 };
 
 export const INITIAL_STATE: RoomState = {

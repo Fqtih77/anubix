@@ -43,6 +43,36 @@ export function db(): DatabaseSync {
       content TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS projects (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      tagline TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL CHECK(status IN ('in-progress','completed')),
+      period TEXT NOT NULL DEFAULT '',
+      summary TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      done TEXT NOT NULL DEFAULT '[]',
+      planned TEXT NOT NULL DEFAULT '[]',
+      tech TEXT NOT NULL DEFAULT '[]',
+      github TEXT,
+      live TEXT,
+      live_note TEXT,
+      accent TEXT NOT NULL,
+      accent2 TEXT NOT NULL,
+      cover TEXT NOT NULL DEFAULT 'letter' CHECK(cover IN ('anubix','letter')),
+      image_file TEXT,
+      image_mime TEXT,
+      image_alt TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      published INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS projects_order ON projects(sort_order);
   `);
 	database = connection;
 	return connection;

@@ -144,6 +144,29 @@
   transform: translateY(-6px);
 }
 
+/* Komut bloğu: dünya kurulurken en son yerine iner, sonra ekranı hafifçe parlar. */
+.structures .command {
+  animation: drop 0.6s cubic-bezier(0.25, 1.4, 0.5, 1) 1.7s both;
+}
+
+.commandPlus {
+  animation: bob 2.2s ease-in-out infinite;
+}
+
+.commandScreen {
+  animation: glow 1.8s ease-in-out infinite alternate;
+}
+
+.commandCursor {
+  animation: cursor 1s steps(1) infinite;
+}
+
+@keyframes cursor {
+  50% {
+    opacity: 0;
+  }
+}
+
 /* ---------- Tıklama alanları ---------- */
 
 .spot {

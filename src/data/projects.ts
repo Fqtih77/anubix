@@ -1,21 +1,23 @@
 /**
  * PROJE VERİLERİ
  * --------------
- * Raflardaki kutular, proje tanıtım ekranı ve sayfa altındaki hızlı liste bu diziden beslenir.
- * Yeni proje eklemek için diziye bir nesne ekle. Odadaki raf yuvası sayısı
- * `src/components/room/layout.ts` içindeki `SHELF_SLOTS` dizisidir; ilk yuvalar sırayla dolar.
+ * Projeler artık veritabanında (SQLite) tutulur ve kişisel paneldeki "Komut bloğu"ndan
+ * koda dokunmadan eklenir, düzenlenir, sıralanır ve gizlenir.
  *
- * Dürüstlük kuralı: `status: "placeholder"` olan kayıtlar gerçek proje değildir,
- * arayüzde açıkça "Örnek proje / içerik eklenecek" olarak gösterilir.
+ * Bu dosyadaki `defaultProjects` listesi yalnızca başlangıç verisidir: veritabanı ilk kez
+ * açıldığında bir kez içeri aktarılır (bkz. `src/lib/server/projects.ts`). Sonrasında
+ * değişiklikleri panelden yap; buradaki liste yalnızca yeni bir kurulumda kullanılır.
+ *
+ * İçerikler CV'deki bilgilere dayanır; CV'de olmayan bağlantı veya başarı uydurulmadı.
  */
 
-export type ProjectStatus = "in-progress" | "completed" | "placeholder";
+export type ProjectStatus = "in-progress" | "completed";
 
-/** Kapakta çizilecek özgün motif. Gerçek görsel eklenince `image` alanı kullanılır. */
-export type CoverMotif = "anubix" | "blank";
+/** Görsel yoksa kapakta çizilecek motif: Anubix adası ya da projenin baş harfi. */
+export type CoverMotif = "anubix" | "letter";
 
 export interface Project {
-  /** URL ve anahtar olarak kullanılan kısa ad */
+  /** URL ve anahtar olarak kullanılan kısa ad (ör. "anubix") */
   id: string;
   title: string;
   tagline: string;
@@ -35,29 +37,29 @@ export interface Project {
   };
   /** Canlı bağlantı yoksa neden olmadığını açıklayan not */
   liveNote?: string;
-  /** Kutu ve tanıtım ekranının ana rengi */
+  /** Klasör, kapak ve tanıtım ekranının ana rengi */
   accent: string;
   /** İkincil vurgu rengi */
   accent2: string;
   cover: CoverMotif;
-  /** İleride gerçek ekran görüntüsü eklemek için: public/ altındaki yol */
+  /** Panelden yüklenen görsel (veritabanındaki projeler için API adresi) */
   image?: { src: string; alt: string };
 }
 
-export const projects: Project[] = [
+export const defaultProjects: Project[] = [
   {
     id: "anubix",
     title: "Anubix",
     tagline: "Kişisel dijital alanım",
     status: "in-progress",
     period: "2026 – Devam ediyor",
-    summary: "CV'mi, projelerimi, başarılarımı ve hesaplarımı bir araya getirecek kişisel platformum.",
+    summary: "CV'mi, projelerimi, başarılarımı ve hesaplarımı bir araya getiren kişisel platformum.",
     description:
-      "Planlayıcı, not defteri, takvim/anımsatıcı ve kişisel dosya deposu içerecek bir alan geliştiriyorum. Kendi iş akışlarıma göre özelleştirdiğim yerel bir dil modelini asistan olarak entegre etmeyi hedefliyorum.",
+      "Planlayıcı, not defteri, takvim/anımsatıcı ve kişisel dosya deposu içeren bir alan geliştiriyorum. Kendi iş akışlarıma göre özelleştirdiğim yerel bir dil modelini asistan olarak entegre ediyorum.",
     done: [
       "Next.js, React ve TypeScript ile kurulmuş, Docker'da çalışan iskelet",
       "Etkileşimli oda arayüzü (şu an gezdiğin sayfa)",
-      "Oturum korumalı kişisel panel; not, görev, takvim ve dosya araçları",
+      "Oturum korumalı kişisel panel; not, görev, takvim, dosya ve proje araçları",
     ],
     planned: [
       "Panel araçları için gelişmiş arama ve düzenleme",
@@ -73,38 +75,130 @@ export const projects: Project[] = [
     accent2: "#6fd3b1",
     cover: "anubix",
   },
-  placeholder(2, "#f29f86", "#ffd6a8"),
-  placeholder(3, "#62b6ee", "#b5e2ff"),
-  placeholder(4, "#e8b84f", "#fff0b8"),
-];
-
-/** Boş raf yuvası: gerçek proje bilgisi eklenene kadar dürüstçe "örnek" olarak görünür. */
-function placeholder(n: number, accent: string, accent2: string): Project {
-  const no = String(n).padStart(2, "0");
-  return {
-    id: `ornek-${no}`,
-    title: `Örnek proje ${no}`,
-    tagline: "İçerik eklenecek",
-    status: "placeholder",
-    summary: "Bu raf yuvası şimdilik boş. Gerçek proje bilgileri eklendiğinde burada görünecek.",
+  {
+    id: "acceltra",
+    title: "Acceltra",
+    tagline: "TEKNOFEST Avcı Drone",
+    status: "completed",
+    period: "2026",
+    summary:
+      "GNSS karıştırması altında FPV drone ile sabit kanatlı hedef İHA'yı insan müdahalesi olmadan bulan, takip eden ve vuran özgün otonom sistem.",
     description:
-      "Bu bir yer tutucu kayıttır; arkasında gerçek bir proje yok. Başlık, açıklama, teknolojiler ve bağlantılar src/data/projects.ts dosyasından eklenecek.",
-    done: [],
-    planned: ["Proje adı ve kısa açıklama", "Kullanılan teknolojiler", "GitHub ve varsa canlı demo bağlantısı"],
+      "Bozuk konum verisini filtreleyip drone'u hedefe yönelttik. Yer istasyonunda YOLOv8n ile tespit, Kalman filtresiyle takip, PID ile güdüm ve ELRS ile komut iletimi kullanıldı. Ekipte donanım sorumlusuydum.",
+    done: [
+      "Drone'un donanım kurulumu, bileşen entegrasyonu ve uçuş hazırlığı",
+      "Algoritma Tasarım Raporu'nun angajman, failsafe ve literatür bölümleri",
+      "ADR aşaması 82.50 puanla geçildi; rapor, simülasyon ve uçuş aşamalarıyla finale kalındı",
+    ],
+    planned: [],
+    tech: ["Python", "YOLOv8n", "Kalman Filtresi", "PID", "ELRS"],
+    links: {},
+    accent: "#ef8a5b",
+    accent2: "#ffd1a6",
+    cover: "letter",
+  },
+  {
+    id: "tavus",
+    title: "TAVUS",
+    tagline: "Dershane yönetim platformu (web ve mobil)",
+    status: "in-progress",
+    period: "2025 – Devam ediyor",
+    summary: "Dershane yönetimini dijitalleştiren multi-tenant SaaS platformu. Kurucu üye ve proje yürütücüsüyüm.",
+    description:
+      "Planlamayı, ekip koordinasyonunu ve müşteri iletişimini yönetiyorum. Web panelinin ve Expo ile mobil uygulamanın frontend geliştirmesini, sunucu kurulumu, yapılandırması ve deployment süreçlerini üstleniyorum.",
+    done: [
+      "React, Tailwind ve shadcn/ui ile web paneli",
+      "Expo ile mobil uygulama",
+      "7 kullanıcı rolü ve PostgreSQL RLS ile tenant izolasyonu",
+      "JWT RS256 kimlik doğrulama ve YZ destekli öğrenci analitiği",
+    ],
+    planned: [],
+    tech: ["React", "Expo", "PostgreSQL", "Tailwind", "shadcn/ui"],
+    links: {},
+    accent: "#3fb68b",
+    accent2: "#bff0dc",
+    cover: "letter",
+  },
+  {
+    id: "optiv-retinax",
+    title: "Optiv / Retinax",
+    tagline: "Optik ürün tanıtımı ve B2B yönetim platformu",
+    status: "completed",
+    period: "2026",
+    summary:
+      "Güneş camı toptancısı için ürün tanıtımını bayi ve yönetim panelleriyle birleştiren platform. Serbest full-stack geliştirici olarak tek başıma geliştirip yayına aldım.",
+    description:
+      "3D gözlük animasyonları ve 8 cam tonlu ürün deneyimini; sipariş, stok ve cari takibi yapılan yönetim panelleriyle aynı platformda birleştirdim.",
+    done: ["3D gözlük animasyonları", "8 cam tonlu ürün deneyimi", "Sipariş, stok ve cari takibi yapan paneller"],
+    planned: [],
+    tech: ["Next.js", "TypeScript", "Three.js"],
+    links: {},
+    accent: "#2f7de1",
+    accent2: "#a9d4fb",
+    cover: "letter",
+  },
+  {
+    id: "otonom-suru",
+    title: "Otonom Sürü Haberleşme",
+    tagline: "TÜBİTAK 2209-A araştırma projesi",
+    status: "completed",
+    period: "2025",
+    summary: "İHA sürüleri için veri önceliklendirme, frekans seçimi ve rota optimizasyonunu birleştiren haberleşme mimarisi.",
+    description:
+      "YOLOv8-Tiny ile veri önceliklendirme, bilişsel radyo ile frekans seçimi ve DQN ile rota optimizasyonunu birleştiren bir mimari tasarladım; NS-3 ile co-simulation kurdum. Danışman: Dr. Onur İnan.",
+    done: [
+      "YOLOv8-Tiny ile veri önceliklendirme",
+      "Bilişsel radyo ile frekans seçimi",
+      "DQN ile rota optimizasyonu",
+      "NS-3 ile co-simulation",
+    ],
+    planned: [],
+    tech: ["PyTorch", "OpenCV", "NS-3"],
+    links: {},
+    accent: "#5b6ee1",
+    accent2: "#c7cdfb",
+    cover: "letter",
+  },
+  {
+    id: "mentorium",
+    title: "Mentorium",
+    tagline: "TEKNOFEST Eğitim Teknolojileri",
+    status: "completed",
+    period: "Mart 2025 – Ağustos 2025",
+    summary: "YZ chatbot, fotoğrafla soru çözümü (VLM) ve öğretmen paneli sunan eğitim koçluğu uygulaması.",
+    description: "Frontend geliştirici olarak uygulamanın UI/UX tasarımını ve Flutter arayüzünü yaptım.",
+    done: ["UI/UX tasarımı", "Flutter ile uygulama arayüzü"],
+    planned: [],
+    tech: ["Flutter", "Dart"],
+    links: {},
+    accent: "#e8b84f",
+    accent2: "#fff0b8",
+    cover: "letter",
+  },
+  {
+    id: "ayzek",
+    title: "AYZEK Web Sitesi",
+    tagline: "Algoritma ve Yapay Zeka Topluluğu",
+    status: "completed",
+    summary: "Selçuk Üniversitesi Algoritma ve Yapay Zeka Topluluğu'nun web sitesi.",
+    description:
+      "Topluluğun yönetim kurulu üyesi olarak sitenin UI/UX tasarımını, frontend geliştirmesini ve deployment sürecini tamamladım.",
+    done: ["UI/UX tasarımı", "Frontend geliştirme", "Deployment"],
+    planned: [],
     tech: [],
     links: {},
-    accent,
-    accent2,
-    cover: "blank",
-  };
-}
-
-export function isPlaceholder(p: Project) {
-  return p.status === "placeholder";
-}
+    accent: "#e2668f",
+    accent2: "#ffc9da",
+    cover: "letter",
+  },
+];
 
 export const STATUS_LABEL: Record<ProjectStatus, string> = {
   "in-progress": "Devam ediyor",
   completed: "Tamamlandı",
-  placeholder: "Örnek proje · içerik eklenecek",
 };
+
+/** Klasör ve kapaklarda kullanılan baş harf (Türkçe büyük harf kurallarıyla). */
+export function projectInitial(p: Pick<Project, "title">) {
+  return (p.title.trim()[0] ?? "?").toLocaleUpperCase("tr-TR");
+}

@@ -191,6 +191,14 @@ export const Window = memo(function Window() {
             d={`M0,${WIN.h * 100} L0,480 Q120,440 230,475 T520,470 L520,${WIN.h * 100} Z`}
             fill="#a5d6b4"
           />
+          {/* Gece: ışıklar kapanınca görünür (ay, yıldızlar ve şehir ışıkları parıltı katmanında) */}
+          <g className={styles.skyNight}>
+            <rect width={WIN.w * 100} height={WIN.h * 100} fill="url(#rm-night-sky)" />
+            <path
+              d={`M0,${WIN.h * 100} V470 H24 V440 H48 V455 H64 V420 H96 V448 H118 V462 H150 V430 H182 V452 H196 V438 H226 V466 H262 V444 H290 V458 H316 V428 H346 V450 H380 V470 H420 V446 H452 V462 H520 V${WIN.h * 100} Z`}
+              fill="#262b55"
+            />
+          </g>
         </g>
       </IsoFace>
 
@@ -340,6 +348,11 @@ function strandPoints(s: Strand) {
     }
   }
   return { wire, bulbs };
+}
+
+/** Bütün ışık zinciri ampullerinin konumları (gece parıltı katmanı da kullanır). */
+export function stringLightBulbs(): P3[] {
+  return STRANDS.flatMap((s) => strandPoints(s).bulbs);
 }
 
 export const StringLights = memo(function StringLights() {

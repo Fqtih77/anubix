@@ -30,6 +30,8 @@ interface Props {
   origin: () => ScreenCorners | null;
   reduced: boolean;
   onClosed: () => void;
+  /** Esc'e önce içerik tepki versin (ör. masaüstünde açık projeyi kapatmak). true → ele alındı. */
+  onEscape?: () => boolean;
   className?: string;
   children: (close: () => void) => ReactNode;
 }
@@ -62,7 +64,7 @@ function matrixFrames(from: Matrix, steps = 18): Keyframe[] {
   });
 }
 
-export function ScreenDialog({ label, veil, origin, reduced, onClosed, className, children }: Props) {
+export function ScreenDialog({ label, veil, origin, reduced, onClosed, onEscape, className, children }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const veilRef = useRef<HTMLDivElement>(null);
@@ -144,6 +146,7 @@ export function ScreenDialog({ label, veil, origin, reduced, onClosed, className
       aria-label={label}
       onCancel={(event) => {
         event.preventDefault();
+        if (onEscape?.()) return;
         void close();
       }}
     >

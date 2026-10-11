@@ -19,7 +19,7 @@ const pixel = Pixelify_Sans({
 export const metadata: Metadata = {
   title: "Anubix | Odama hoş geldin",
   description:
-    "Anubix: projelerimi ve kişisel araçlarımı topladığım açık kaynaklı dijital alan. İzometrik odayı gez, raftaki projelere göz at.",
+    "Anubix: projelerimi ve kişisel araçlarımı topladığım açık kaynaklı dijital alan. İzometrik odayı gez, duvardaki plaklardan projelerime ve CV'me göz at.",
   icons: { icon: "/favicon.svg" },
 };
 

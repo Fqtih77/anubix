@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import type { Project } from "@/data/projects";
-import { SCREENS } from "../layout";
+import { type RecordId, RECORDS, SCREENS } from "../layout";
 import styles from "./Scene.module.css";
 
 /**
@@ -8,7 +7,7 @@ import styles from "./Scene.module.css";
  * `IsoFace` onları monitörün izometrik yüzüne yerleştirir.
  */
 
-export type MainScreenState = "saver" | "boot" | "project";
+export type MainScreenState = "saver" | "boot" | "cv" | "projects";
 export type VerticalScreenState = "saver" | "cursor" | "login";
 export type TvState = "off" | "boot" | "chill";
 
@@ -57,43 +56,70 @@ export function LeftScreen() {
 
 /* ---------- Ana monitör ---------- */
 
-export function MainScreen({ state, project }: { state: MainScreenState; project: Project | null }) {
+/** Ana monitörde ne var: ekran koruyucu, plak yükleniyor, CV ya da proje masaüstü. */
+export function MainScreen({ state, loaded }: { state: MainScreenState; loaded: RecordId | null }) {
   const { w, h } = size("main");
-  if (state === "boot" && project) {
+  if (state === "boot" && loaded) {
+    const record = RECORDS[loaded];
     return (
       <g>
         <rect width={w} height={h} fill="#17142a" />
-        <text x={w / 2} y={h / 2 - 18} textAnchor="middle" className={styles.screenTitleSm} fill="#ffffff">
-          {project.title.toUpperCase()}
-        </text>
-        <rect x={w * 0.2} y={h / 2} width={w * 0.6} height={10} rx={5} fill="#2e2946" />
-        <rect className={styles.bootBar} x={w * 0.2} y={h / 2} width={w * 0.6} height={10} rx={5} fill={project.accent} />
-        <text x={w / 2} y={h / 2 + 36} textAnchor="middle" className={styles.screenSmall} fill="#bdb6d6">
-          YÜKLENİYOR…
+        <g transform={`translate(${w / 2} ${h / 2 - 36})`}>
+          <g className={styles.bootDisc}>
+            <circle r={26} fill="#2a2640" />
+            <circle r={18} fill="none" stroke="#3b3656" strokeWidth={2} />
+            <circle r={9} fill={record.color} />
+            <rect x={-2} y={-24} width={4} height={10} rx={2} fill="#ffffff" opacity={0.5} />
+          </g>
+        </g>
+        <rect x={w * 0.2} y={h / 2 + 4} width={w * 0.6} height={10} rx={5} fill="#2e2946" />
+        <rect className={styles.bootBar} x={w * 0.2} y={h / 2 + 4} width={w * 0.6} height={10} rx={5} fill={record.color} />
+        <text x={w / 2} y={h / 2 + 40} textAnchor="middle" className={styles.screenSmall} fill="#bdb6d6">
+          {record.label} PLAĞI OKUNUYOR…
         </text>
       </g>
     );
   }
-  if (state === "project" && project) {
-    const placeholder = project.status === "placeholder";
+  if (state === "cv") {
     return (
       <g>
-        <rect width={w} height={h} fill={project.accent} />
-        <rect width={w} height={h} fill="url(#rm-screen-sheen)" />
-        <text x={18} y={30} className={styles.screenSmall} fill="#ffffffcc">
-          {placeholder ? "ÖRNEK PROJE" : "PROJE"}
+        <rect width={w} height={h} fill="#cfd6e4" />
+        <rect width={w} height={14} fill="#2d3344" />
+        <text x={8} y={10.5} className={styles.screenTiny} fill="#d7dcea">
+          fatih_ozturk_cv.pdf
         </text>
-        <text x={18} y={h / 2 + 4} className={styles.screenTitle} fill="#ffffff">
-          {project.title.toUpperCase()}
-        </text>
-        <text x={18} y={h / 2 + 30} className={styles.screenSmall} fill="#ffffffdd">
-          {project.tagline}
-        </text>
-        <g className={styles.blink}>
-          <text x={18} y={h - 18} className={styles.screenSmall} fill="#ffffff">
-            ▶ BAŞLAT
-          </text>
+        <g transform={`translate(${w / 2 - 70} 22)`}>
+          <rect width={140} height={h} fill="#ffffff" />
+          <rect x={30} y={10} width={80} height={9} rx={2} fill="#2563eb" />
+          <rect x={22} y={24} width={96} height={4} rx={2} fill="#9aa3b5" />
+          {[38, 70, 110].map((y) => (
+            <g key={y}>
+              <rect x={10} y={y} width={46} height={5} rx={2} fill="#2563eb" />
+              <rect x={10} y={y + 7} width={120} height={1.5} fill="#2563eb" />
+              <rect x={14} y={y + 13} width={110} height={3} rx={1.5} fill="#c4cad6" />
+              <rect x={14} y={y + 20} width={92} height={3} rx={1.5} fill="#c4cad6" />
+            </g>
+          ))}
         </g>
+      </g>
+    );
+  }
+  if (state === "projects") {
+    return (
+      <g>
+        <rect width={w} height={h} fill="url(#rm-desktop)" />
+        <rect width={w} height={14} fill="#1b1730" opacity={0.75} />
+        <text x={8} y={10.5} className={styles.screenTiny} fill="#ffffff">
+          ◆ Anubix · Projeler
+        </text>
+        {MINI_FOLDERS.map(([x, y, c]) => (
+          <g key={`${x}-${y}`} transform={`translate(${x} ${y})`}>
+            <path d="M0,6 h14 l5,-6 h19 v36 h-38 Z" fill={c} />
+            <rect x={0} y={9} width={38} height={27} rx={3} fill={c} />
+            <rect x={0} y={9} width={38} height={9} fill="#ffffff" opacity={0.3} />
+            <rect x={4} y={42} width={30} height={4} rx={2} fill="#ffffff" opacity={0.8} />
+          </g>
+        ))}
       </g>
     );
   }
@@ -111,11 +137,21 @@ export function MainScreen({ state, project }: { state: MainScreenState; project
         </g>
       </g>
       <text x={w / 2} y={h - 18} textAnchor="middle" className={styles.screenSmall} fill="#ffffffd0">
-        ← raftan bir proje seç
+        ← duvardaki plaklardan birini seç
       </text>
     </g>
   );
 }
+
+const MINI_FOLDERS: [number, number, string][] = [
+  [28, 34, "#ffd36e"],
+  [92, 34, "#7fd0ad"],
+  [156, 34, "#f29f86"],
+  [220, 34, "#a9d4fb"],
+  [28, 110, "#b9a8f6"],
+  [92, 110, "#f2b84b"],
+  [156, 110, "#e2668f"],
+];
 
 /* ---------- Dikey monitör: gizli giriş ---------- */
 

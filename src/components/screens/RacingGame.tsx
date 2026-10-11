@@ -296,7 +296,8 @@ export function RacingGame({ onClose }: { onClose: () => void }) {
         drawTrack(ctx, race, phaseRef.current, layout);
         paintedPhase = phaseRef.current;
       }
-      frame = window.requestAnimationFrame(tick);
+      // Menüde, molada ve yarış bitince boş yere saniyede 60 kare çizme.
+      if (phase === "playing" && phaseRef.current === "playing") frame = window.requestAnimationFrame(tick);
     };
     frame = window.requestAnimationFrame(tick);
     return () => {
@@ -305,7 +306,7 @@ export function RacingGame({ onClose }: { onClose: () => void }) {
       window.removeEventListener("keyup", onKeyUp);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [activateTurbo, changePhase, layout, wide]);
+  }, [activateTurbo, changePhase, layout, wide, phase]);
 
   const pointCar = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (phaseRef.current !== "playing") return;

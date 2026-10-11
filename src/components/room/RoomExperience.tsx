@@ -2,15 +2,27 @@
 
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { QuickLook } from "@/components/home/QuickLook";
+import { CvScreen } from "@/components/screens/CvScreen";
 import { LoginScreen } from "@/components/screens/LoginScreen";
-import { ProjectShowcase } from "@/components/screens/ProjectShowcase";
+import { ProjectsDesktop } from "@/components/screens/ProjectsDesktop";
 import { RacingGame } from "@/components/screens/RacingGame";
 import { ScreenDialog, type ScreenCorners } from "@/components/screens/ScreenDialog";
 import type { Project } from "@/data/projects";
 import { type Box3, box, clamp, faceCorners, inflate, iso, type P2, silhouette } from "@/lib/iso";
 import { useMotionPreference } from "@/lib/useMotionPreference";
 import { type Bubble, HotspotLayer, type HotspotDef } from "./Hotspots";
-import { BED_CORNER, MONITORS, REGIONS, SCENE, SCREENS, SHELF_SLOTS, TV_CORNER } from "./layout";
+import {
+  BED_CORNER,
+  LIGHT_SWITCH,
+  MONITORS,
+  RECORD_IDS,
+  type RecordId,
+  RECORDS,
+  REGIONS,
+  SCENE,
+  SCREENS,
+  TV_CORNER,
+} from "./layout";
 import styles from "./RoomExperience.module.css";
 import { RoomHud } from "./RoomHud";
 import { createRoomStore, type Overlay } from "./roomStore";
@@ -22,7 +34,7 @@ import {
   idleScript,
   loginScript,
   mainMonitorScript,
-  projectScript,
+  recordScript,
   restScript,
   resumeGameScript,
   type Script,
@@ -64,6 +76,8 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
   const [running, setRunning] = useState<{ id: string; quiet: boolean } | null>(null);
   const [hotId, setHotId] = useState<string | null>(null);
   const [explored, setExplored] = useState(false);
+  /** Ekran okuyucuya giden kısa duyuru (ör. "Işıklar kapandı") */
+  const [announce, setAnnounce] = useState("");
 
   const trackRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -74,6 +88,8 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
   const regionRef = useRef(0);
   const lastInput = useRef(0);
   const bubbleTimer = useRef(0);
+  /** Proje masaüstü açıkken Esc önce açık projeyi kapatsın diye masaüstünün kendi işleyicisi */
+  const desktopEscape = useRef<() => boolean>(() => false);
 
   useEffect(() => {
     reducedRef.current = reduced;
@@ -92,9 +108,6 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
   }, []);
 
   const camera = useCamera({ stageRef, worldRef, layerRef, trackRef, onRegion });
-
-  /** Raflara sığan projeler (yuva sayısı kadar). */
-  const shelfProjects = useMemo(() => projects.slice(0, SHELF_SLOTS.length), [projects]);
 
   /* ---------- Yönetmen: senaryoların kullandığı araçlar ---------- */
 
@@ -214,6 +227,18 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
     settle(current, "finish");
   }, [settle]);
 
+  /** Yatağın yanındaki düğme: odanın ışığı (açık / koyu tema). Tercih bu tarayıcıda saklanır. */
+  const toggleLights = useCallback(() => {
+    const next = store.get().room.lights === "on" ? "off" : "on";
+    store.update((s) => ({ ...s, room: { ...s.room, lights: next } }));
+    setAnnounce(next === "off" ? "Işıklar kapandı, gece modu açık." : "Işıklar açıldı.");
+    try {
+      window.localStorage.setItem("anubix:lights", next);
+    } catch {
+      // Saklanamazsa yalnızca bu ziyaret için geçerli olur.
+    }
+  }, [store]);
+
   const backToDesk = useCallback(() => {
     const activity = store.get().activity;
     if (activity === "gaming") void run(chillScript("gaming"));
@@ -235,8 +260,8 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
       {
         id: "main-monitor",
         label: "Ana monitör",
-        hint: "Takılı projeyi aç",
-        ariaLabel: "Ana monitör: bilgisayara takılı projenin tanıtımını aç",
+        hint: "Takılı plağı aç",
+        ariaLabel: "Ana monitör: bilgisayara takılı plağın ekranını aç (CV ya da proje masaüstü)",
         region: "desk",
         polygon: toWorldPolygon([MONITORS.main], 4),
       },
@@ -249,17 +274,19 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
         polygon: toWorldPolygon([MONITORS.vertical], 10),
         marker: "secret",
       },
-      ...shelfProjects.map<HotspotDef>((p, i) => {
-        const slot = SHELF_SLOTS[i];
-        const placeholder = p.status === "placeholder";
+      ...RECORD_IDS.map<HotspotDef>((id) => {
+        const record = RECORDS[id];
         return {
-          id: `project:${p.id}`,
-          label: p.title,
-          hint: placeholder ? "Örnek proje · içerik eklenecek" : "Tanıtımı aç",
-          ariaLabel: `Proje kutusu: ${p.title}${placeholder ? ", örnek proje" : ""}. Avatar kutuyu alıp bilgisayara takar ve tanıtım ekranı açılır.`,
-          region: "shelves",
-          polygon: toWorldPolygon([{ ...slot.case, h: slot.case.h + 0.7 }], 5),
-          marker: i === 0 ? "spark" : undefined,
+          id: `record:${id}`,
+          label: id === "cv" ? "CV plağı" : "Projeler plağı",
+          hint: record.hint,
+          ariaLabel:
+            id === "cv"
+              ? "CV plağı: avatar plağı alıp bilgisayara takar ve özgeçmiş ekranı açılır"
+              : "Projeler plağı: avatar plağı alıp bilgisayara takar ve proje masaüstü açılır",
+          region: "records",
+          polygon: toWorldPolygon([record.frame], 6),
+          marker: "spark",
         };
       }),
       {
@@ -288,8 +315,17 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
         polygon: toWorldPolygon([BED_CORNER.base, BED_CORNER.headboard, BED_CORNER.duvet]),
         marker: "spark",
       },
+      {
+        id: "light-switch",
+        label: "Işık düğmesi",
+        hint: "Işığı aç / kapat",
+        ariaLabel: "Işık düğmesi: odanın ışığını aç ya da kapat (koyu tema)",
+        region: "bed",
+        polygon: toWorldPolygon([LIGHT_SWITCH], 14),
+        marker: "secret",
+      },
     ],
-    [shelfProjects],
+    [],
   );
 
   const activate = useCallback(
@@ -300,18 +336,18 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
         // Avatar masasında değilse (oyun, uyku) önce masasına döner.
         if (activity === "desk") void run(greetScript());
         else backToDesk();
-      } else if (id === "main-monitor") void run(mainMonitorScript(store.get().room.loadedProject));
+      } else if (id === "main-monitor") void run(mainMonitorScript(store.get().room.loadedRecord));
       else if (id === "secret-monitor") void run(loginScript());
       else if (id === "bean-bag") void run(chillScript(activity));
       else if (id === "tv") void run(activity === "gaming" ? resumeGameScript() : chillScript(activity));
       else if (id === "bed") void run(restScript(activity));
-      else if (id.startsWith("project:")) {
-        const projectId = id.slice("project:".length);
-        const i = shelfProjects.findIndex((p) => p.id === projectId);
-        if (i >= 0) void run(projectScript(projectId, shelfProjects[i].title, SHELF_SLOTS[i]));
+      else if (id === "light-switch") toggleLights();
+      else if (id.startsWith("record:")) {
+        const record = id.slice("record:".length);
+        if (record === "cv" || record === "projects") void run(recordScript(record as RecordId));
       }
     },
-    [run, shelfProjects, store, backToDesk],
+    [run, store, backToDesk, toggleLights],
   );
 
   const onFocusSpot = useCallback(
@@ -349,6 +385,7 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
     const overlay = store.get().overlay;
     if (!overlay || overlay.direct) return null;
     const face = overlay.kind === "login" ? SCREENS.vertical : overlay.kind === "game" ? SCREENS.tv : SCREENS.main;
+    // cv ve desktop ana monitörden büyür.
     const c = faceCorners(face.plane, face.at, face.w, face.h);
     const toClient = (p: P2) => camera.worldToClient([p[0] + SCENE.originX, p[1] + SCENE.originY]);
     return { tl: toClient(c.tl), tr: toClient(c.tr), bl: toClient(c.bl) };
@@ -365,22 +402,25 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
     void camera.release(reducedRef.current ? 0 : 900);
   }, [camera, store]);
 
-  const switchProject = useCallback(
-    (projectId: string) => {
-      store.update((s) => {
-        if (s.overlay?.kind !== "project") return s;
-        const onShelf = shelfProjects.some((p) => p.id === projectId);
-        return {
-          ...s,
-          overlay: { ...s.overlay, projectId },
-          room: onShelf
-            ? { ...s.room, loadedProject: projectId, takenProject: projectId, mainScreen: "project" }
-            : s.room,
-        };
-      });
-    },
-    [shelfProjects, store],
-  );
+  /* ---------- Işık tercihi ve sayfa teması ---------- */
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("anubix:lights") === "off") {
+        store.update((s) => ({ ...s, room: { ...s.room, lights: "off" } }));
+      }
+    } catch {
+      // Tarayıcı depolaması kapalıysa ışıklar açık başlar.
+    }
+  }, [store]);
+
+  const lights = state.room.lights;
+  useEffect(() => {
+    document.documentElement.dataset.theme = lights === "off" ? "dark" : "light";
+    return () => {
+      delete document.documentElement.dataset.theme;
+    };
+  }, [lights]);
 
   /* ---------- Açılış animasyonu ---------- */
 
@@ -406,6 +446,8 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select")) return;
       if (event.key === "Escape") {
+        // Atlanan senaryo bir ekran açabilir; aynı Esc onu hemen kapatmasın.
+        event.preventDefault();
         if (runningRef.current) skip();
         else backToDesk();
         return;
@@ -536,8 +578,6 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
   }, [state.bubble, state.avatar.pos]);
 
   const overlay = state.overlay;
-  const overlayProject =
-    overlay?.kind === "project" ? (projects.find((p) => p.id === overlay.projectId) ?? null) : null;
   const busy = running !== null && !running.quiet;
   const calm = busy || overlay !== null || intro !== "done";
   const region = REGIONS[regionIndex] ?? REGIONS[0];
@@ -551,18 +591,21 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
         style={{ "--regions": REGIONS.length } as CSSProperties}
         aria-label="Etkileşimli oda"
       >
-        <div ref={stageRef} className={styles.stage} data-intro={intro}>
+        <div ref={stageRef} className={styles.stage} data-intro={intro} data-lights={lights}>
           <div className={styles.backdrop} aria-hidden="true" />
           <p className={styles.srOnly}>
             Açık renkli, izometrik bir çalışma odası. Ortada iki yatay ve bir dikey monitörlü beyaz bir masa ve
-            masada oturan bir avatar var. Sol duvarda proje rafları ve televizyon, sağda pencere ve yatak bulunuyor.
-            Nesneler düğme olarak kullanılabilir; aşağıda animasyonsuz hızlı liste de var.
+            masada oturan bir avatar var. Sol duvarda içinde plak olan iki tablo (CV ve projeler) ve televizyon,
+            sağda pencere, yatak ve ışık düğmesi bulunuyor. Nesneler düğme olarak kullanılabilir; aşağıda
+            animasyonsuz hızlı liste de var.
+          </p>
+          <p className={styles.srOnly} aria-live="polite">
+            {announce}
           </p>
           <div ref={worldRef} className={styles.world} style={{ width: SCENE.width, height: SCENE.height }}>
             <RoomScene
               room={state.room}
               avatar={state.avatar}
-              projects={shelfProjects}
               intro={intro}
               calm={calm}
               hotId={hotId}
@@ -596,24 +639,39 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
 
       <QuickLook
         projects={projects}
-        onOpenProject={(id) => openDirect({ kind: "project", projectId: id })}
+        onOpenProject={(id) => openDirect({ kind: "desktop", projectId: id })}
+        onOpenCv={() => openDirect({ kind: "cv" })}
         onBackToRoom={() => goRegion(0)}
       />
 
-      {overlay?.kind === "project" && overlayProject ? (
+      {overlay?.kind === "cv" ? (
         <ScreenDialog
-          label={`${overlayProject.title} proje tanıtımı`}
-          veil={overlayProject.accent}
+          label="Özgeçmiş"
+          veil="#eef2f8"
           origin={overlayOrigin}
           reduced={reduced}
           onClosed={onOverlayClosed}
         >
+          {(close) => <CvScreen onClose={close} />}
+        </ScreenDialog>
+      ) : null}
+      {overlay?.kind === "desktop" ? (
+        <ScreenDialog
+          label="Proje masaüstü"
+          veil={RECORDS.projects.color}
+          origin={overlayOrigin}
+          reduced={reduced}
+          onClosed={onOverlayClosed}
+          onEscape={() => desktopEscape.current()}
+        >
           {(close) => (
-            <ProjectShowcase
+            <ProjectsDesktop
               projects={projects}
-              projectId={overlayProject.id}
-              onSwitch={switchProject}
+              initialProjectId={overlay.projectId ?? null}
               onClose={close}
+              registerEscape={(handler) => {
+                desktopEscape.current = handler;
+              }}
             />
           )}
         </ScreenDialog>

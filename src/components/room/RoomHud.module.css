@@ -31,11 +31,11 @@
 .chip {
   padding: 5px 10px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.7);
+  background: var(--surface-glass);
   color: var(--ink-soft);
   font-size: 12px;
   font-weight: 700;
-  box-shadow: 0 0 0 1px rgb(58 40 80 / 0.08);
+  box-shadow: 0 0 0 1px var(--line);
 }
 
 .tools {
@@ -52,7 +52,7 @@
   padding: 0 14px;
   border: 0;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.82);
+  background: var(--surface-glass);
   color: var(--ink);
   font: inherit;
   font-size: 13.5px;
@@ -61,14 +61,14 @@
   cursor: pointer;
   box-shadow:
     0 4px 14px rgb(58 40 80 / 0.08),
-    0 0 0 1px rgb(58 40 80 / 0.06);
+    0 0 0 1px var(--line);
   transition:
     background 0.15s ease,
     transform 0.15s ease;
 }
 
 .tool:hover {
-  background: #ffffff;
+  background: var(--surface);
   transform: translateY(-1px);
 }
 
@@ -80,8 +80,8 @@
   margin: 0;
   padding: 9px 16px;
   border-radius: 999px;
-  background: var(--ink);
-  color: #ffffff;
+  background: var(--solid);
+  color: var(--solid-ink);
   font-size: 14px;
   font-weight: 700;
   max-width: min(430px, 100%);
@@ -90,7 +90,7 @@
 }
 
 .explore span {
-  color: var(--butter);
+  color: var(--solid-accent);
 }
 
 @keyframes explore {
@@ -136,7 +136,7 @@
 .status {
   padding: 9px 14px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.92);
+  background: var(--surface-strong);
   color: var(--ink);
   font-size: 13px;
   font-weight: 750;
@@ -151,19 +151,19 @@
   padding: 0 14px;
   border: 0;
   border-radius: 999px;
-  background: var(--ink);
-  color: #ffffff;
+  background: var(--solid);
+  color: var(--solid-ink);
   font: inherit;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 3px 0 #17121f;
+  box-shadow: 0 3px 0 var(--solid-shadow);
   transition: transform 0.1s ease;
 }
 
 .primary:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 #17121f;
+  box-shadow: 0 2px 0 var(--solid-shadow);
 }
 
 .regions ul {
@@ -173,10 +173,11 @@
   padding: 6px;
   list-style: none;
   border-radius: 20px;
-  background: rgb(255 255 255 / 0.9);
+  background: var(--surface-strong);
   box-shadow:
     0 14px 36px rgb(58 40 80 / 0.14),
-    0 0 0 1px rgb(58 40 80 / 0.06);
+    0 0 0 1px var(--line);
+  transition: background 0.7s ease;
 }
 
 .region {
@@ -205,8 +206,8 @@
 }
 
 .region[aria-current="true"] {
-  background: var(--ink);
-  color: #ffffff;
+  background: var(--solid);
+  color: var(--solid-ink);
 }
 
 .icon {

@@ -1,36 +1,49 @@
-import type { Project } from "@/data/projects";
+import { type Project, projectInitial } from "@/data/projects";
 
 /**
- * Proje kapağı: gerçek ekran görüntüsü eklenene kadar özgün, kodla çizilmiş bir kapak.
- * `project.image` doldurulursa ProjectShowcase onu kullanır.
+ * Proje kapağı: panelden görsel yüklenene kadar kodla çizilmiş özgün bir kapak.
+ * Anubix için yüzen voxel ada, diğer projeler için proje renginde büyük bir baş harf.
+ * `project.image` doluysa ProjectShowcase onu kullanır.
  */
 export function ProjectCover({ project, className }: { project: Project; className?: string }) {
   const id = `cover-${project.id}`;
-  if (project.cover === "blank") {
+  if (project.cover === "letter") {
     return (
-      <svg className={className} viewBox="0 0 400 400" role="img" aria-label="Görsel henüz eklenmedi">
-        <rect width="400" height="400" rx="28" fill="#fbf8f4" />
-        <rect
-          x="22"
-          y="22"
-          width="356"
-          height="356"
-          rx="20"
-          fill="none"
-          stroke={project.accent}
-          strokeWidth="6"
-          strokeDasharray="22 14"
-        />
-        <g transform="translate(200 180)">
-          <path d="M0,-70 L80,-30 L0,10 L-80,-30 Z" fill={project.accent2} />
-          <path d="M-80,-30 L0,10 L0,90 L-80,50 Z" fill={project.accent} opacity="0.75" />
-          <path d="M80,-30 L0,10 L0,90 L80,50 Z" fill={project.accent} />
-          <text x="0" y="-18" textAnchor="middle" fontSize="54" fontWeight="700" fill="#ffffff" style={{ fontFamily: "var(--font-pixel), monospace" }}>
-            ?
-          </text>
-        </g>
-        <text x="200" y="330" textAnchor="middle" fontSize="22" fill="#8d8299" style={{ fontFamily: "var(--font-pixel), monospace" }}>
-          Görsel eklenecek
+      <svg className={className} viewBox="0 0 400 400" role="img" aria-label={`${project.title} için çizilmiş kapak`}>
+        <defs>
+          <linearGradient id={`${id}-bg`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={project.accent} />
+            <stop offset="1" stopColor="#241a4a" />
+          </linearGradient>
+        </defs>
+        <rect width="400" height="400" rx="28" fill={`url(#${id}-bg)`} />
+        {/* Arkada izometrik küpler */}
+        {[
+          [70, 300, 46],
+          [330, 120, 38],
+          [300, 320, 28],
+          [96, 96, 24],
+        ].map(([x, y, r]) => (
+          <g key={`${x}-${y}`} transform={`translate(${x} ${y})`} opacity="0.35">
+            <path d={`M0,${-r} L${r},${-r / 2} L0,0 L${-r},${-r / 2} Z`} fill={project.accent2} />
+            <path d={`M${-r},${-r / 2} L0,0 L0,${r} L${-r},${r / 2} Z`} fill="#ffffff" opacity="0.5" />
+            <path d={`M${r},${-r / 2} L0,0 L0,${r} L${r},${r / 2} Z`} fill="#000000" opacity="0.25" />
+          </g>
+        ))}
+        <text
+          x="200"
+          y="252"
+          textAnchor="middle"
+          fontSize="200"
+          fontWeight="700"
+          fill="#ffffff"
+          style={{ fontFamily: "var(--font-pixel), monospace" }}
+        >
+          {projectInitial(project)}
+        </text>
+        <rect x="32" y="300" width="336" height="4" rx="2" fill={project.accent2} opacity="0.8" />
+        <text x="32" y="352" fontSize="26" fontWeight="700" fill="#ffffff" style={{ fontFamily: "var(--font-pixel), monospace" }}>
+          {project.title.toLocaleUpperCase("tr-TR")}
         </text>
       </svg>
     );

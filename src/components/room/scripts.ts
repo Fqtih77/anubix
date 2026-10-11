@@ -12,7 +12,7 @@
 import type { P3 } from "@/lib/iso";
 import type { AvatarState } from "./avatar/model";
 import { facingFor } from "./avatar/model";
-import { type ShelfSlot, type ShotId, SPOTS } from "./layout";
+import { type RecordId, RECORDS, type ShotId, SPOTS } from "./layout";
 import { type Activity, DESK_ROOM, type Overlay, type RoomState, SEATED_AVATAR } from "./roomStore";
 import type { RoomProps } from "./scene/RoomScene";
 
@@ -118,54 +118,94 @@ export async function returnToDesk(d: Director) {
   d.avatar({ headFacing: undefined, holding: null });
 }
 
+/** Takılı plağa göre ana monitörde ne görüneceği. */
+const screenFor = (record: RecordId | null): RoomProps["mainScreen"] => record ?? "saver";
+
+/** Plağa göre açılacak tam ekran: CV ekranı ya da proje masaüstü. */
+const overlayFor = (record: RecordId): Overlay => (record === "cv" ? { kind: "cv" } : { kind: "desktop" });
+
+/** Plak, ışık gibi kalıcı oda durumunu koruyarak masadaki varsayılan durum. */
+function keptRoom(s: RoomState): RoomProps {
+  return {
+    ...DESK_ROOM,
+    takenRecord: s.room.takenRecord,
+    loadedRecord: s.room.loadedRecord,
+    mainScreen: screenFor(s.room.loadedRecord),
+    lights: s.room.lights,
+  };
+}
+
 /** Odayı animasyonsuz "masada oturuyor" durumuna getirir. */
 function deskState(d: Director, room: Partial<RoomProps> = {}) {
-  const s = d.state();
-  d.room({
-    ...DESK_ROOM,
-    takenProject: s.room.takenProject,
-    loadedProject: s.room.loadedProject,
-    mainScreen: s.room.loadedProject ? "project" : "saver",
-    ...room,
-  });
+  d.room({ ...keptRoom(d.state()), ...room });
   d.avatar({ ...SEATED_AVATAR });
   d.activity("desk");
 }
 
-/* ---------- Proje rafı ---------- */
+/* ---------- Plak duvarı ---------- */
 
-export function projectScript(projectId: string, title: string, slot: ShelfSlot): Script {
+/**
+ * Tablodaki plağa tıklanınca: avatar kalkar, tabloya gider, plağı alır, bilgisayar
+ * kasasına takar, masasına döner; ana monitör büyüyüp CV ekranına ya da proje
+ * masaüstüne dönüşür. Kasada başka bir plak varsa avatar önce onu çıkarıp kendi
+ * tablosuna geri asar. Plak zaten takılıysa avatar yeniden yürümez.
+ */
+export function recordScript(record: RecordId): Script {
+  const { label, stand } = RECORDS[record];
+  const name = record === "cv" ? "CV" : "Projeler";
   return {
-    id: `project:${projectId}`,
+    id: `record:${record}`,
     async run(d) {
       await returnToDesk(d);
-      const s = d.state();
-      if (s.room.loadedProject === projectId) {
-        d.status(`${title} zaten bilgisayarda, ekran açılıyor`);
-        d.room({ mainScreen: "project" });
+      if (d.state().room.loadedRecord === record) {
+        d.status(`${name} plağı zaten bilgisayarda, ekran açılıyor`);
+        d.room({ mainScreen: record });
         await d.camera("mainMonitor");
-        d.open({ kind: "project", projectId });
+        d.open(overlayFor(record));
         return;
       }
 
-      d.status(`Avatar ${title} kutusunu almaya gidiyor`);
-      const cam = d.camera("shelfAction");
+      const previous = d.state().room.loadedRecord;
+      d.status(`Avatar ${name} plağını almaya gidiyor`);
+      const cam = d.camera("recordAction");
       await standUp(d);
       await d.walk([SPOTS.deskLeft]);
       d.room({ chairLayer: "behind" });
-      await d.walk([[SPOTS.deskLeft[0], slot.stand[1], 0]]);
+
+      if (previous) {
+        // Takılı plak önce kasadan çıkarılır ve kendi tablosuna geri asılır.
+        d.status(`${RECORDS[previous].label} plağı yerine asılıyor`);
+        await d.walk([SPOTS.pc]);
+        d.avatar({ pose: "crouch", facing: "-y" });
+        await d.wait(380);
+        d.room({ loadedRecord: null, mainScreen: "saver" });
+        d.avatar({ holding: previous, pose: "carry" });
+        await d.wait(220);
+        await d.walk([
+          [SPOTS.deskLeft[0], SPOTS.pc[1], 0],
+          [SPOTS.deskLeft[0], RECORDS[previous].stand[1], 0],
+        ]);
+        d.avatar({ pose: "reach", facing: "-x" });
+        await d.wait(420);
+        d.room({ takenRecord: null });
+        d.avatar({ holding: null, pose: "stand" });
+        await d.wait(200);
+        d.status(`Avatar ${name} plağını almaya gidiyor`);
+      }
+
+      await d.walk([[SPOTS.deskLeft[0], stand[1], 0]]);
       d.avatar({ pose: "reach", facing: "-x" });
       await d.wait(480);
-      d.room({ takenProject: projectId });
-      d.avatar({ holding: projectId, pose: "carry" });
+      d.room({ takenRecord: record });
+      d.avatar({ holding: record, pose: "carry" });
       await d.wait(240);
       await cam;
 
-      d.status(`${title} bilgisayara takılıyor`);
+      d.status(`${label} plağı bilgisayara takılıyor`);
       await d.walk([SPOTS.deskLeft, SPOTS.pc]);
       d.avatar({ pose: "crouch", facing: "-y" });
       await d.wait(420);
-      d.room({ loadedProject: projectId, mainScreen: "boot" });
+      d.room({ loadedRecord: record, mainScreen: "boot" });
       await d.wait(380);
       d.avatar({ pose: "carry" });
 
@@ -173,23 +213,23 @@ export function projectScript(projectId: string, title: string, slot: ShelfSlot)
       await d.walk([SPOTS.stand]);
       await sitDown(d);
       d.avatar({ holding: null, pose: "mouse" });
-      d.room({ mainScreen: "project" });
-      d.status(`${title} ana monitörde açıldı`);
+      d.room({ mainScreen: record });
+      d.status(record === "cv" ? "Özgeçmiş açılıyor" : "Proje masaüstü açılıyor");
       await d.camera("mainMonitor");
       await d.wait(200);
       d.avatar({ pose: "type" });
-      d.open({ kind: "project", projectId });
+      d.open(overlayFor(record));
     },
     finish(d) {
-      deskState(d, { takenProject: projectId, loadedProject: projectId, mainScreen: "project" });
+      deskState(d, { takenRecord: record, loadedRecord: record, mainScreen: record });
       d.cameraJump("mainMonitor");
-      d.open({ kind: "project", projectId });
+      d.open(overlayFor(record));
     },
   };
 }
 
-/** Ana monitöre tıklanınca: takılı proje varsa açar, yoksa avatar ipucu verir. */
-export function mainMonitorScript(loaded: string | null): Script {
+/** Ana monitöre tıklanınca: takılı plak varsa ekranını açar, yoksa avatar ipucu verir. */
+export function mainMonitorScript(loaded: RecordId | null): Script {
   if (!loaded) {
     return {
       id: "main-monitor-hint",
@@ -197,12 +237,13 @@ export function mainMonitorScript(loaded: string | null): Script {
       keepCamera: true,
       quiet: true,
       async run(d) {
+        const hint = "Önce duvardaki plaklardan birini seçelim!";
         if (d.state().activity !== "desk") {
-          d.say("Önce raftan bir proje kutusu seçelim!");
+          d.say(hint);
           return;
         }
         d.avatar({ headFacing: "+y", pose: "sit" });
-        d.say("Önce raftan bir proje kutusu seçelim!");
+        d.say(hint);
         await d.wait(1900);
         d.avatar({ headFacing: undefined, pose: "type" });
       },
@@ -215,14 +256,14 @@ export function mainMonitorScript(loaded: string | null): Script {
     id: "main-monitor",
     async run(d) {
       await returnToDesk(d);
-      d.room({ mainScreen: "project" });
+      d.room({ mainScreen: loaded });
       await d.camera("mainMonitor");
-      d.open({ kind: "project", projectId: loaded });
+      d.open(overlayFor(loaded));
     },
     finish(d) {
       deskState(d);
       d.cameraJump("mainMonitor");
-      d.open({ kind: "project", projectId: loaded });
+      d.open(overlayFor(loaded));
     },
   };
 }
@@ -284,10 +325,7 @@ export function chillScript(current: Activity): Script {
     finish(d) {
       const s = d.state();
       d.room({
-        ...DESK_ROOM,
-        takenProject: s.room.takenProject,
-        loadedProject: s.room.loadedProject,
-        mainScreen: s.room.loadedProject ? "project" : "saver",
+        ...keptRoom(s),
         chairRolled: true,
         chairLayer: "behind",
         tv: "chill",
@@ -366,10 +404,7 @@ export function restScript(current: Activity, options: { auto?: boolean } = {}):
       }
       const s = d.state();
       d.room({
-        ...DESK_ROOM,
-        takenProject: s.room.takenProject,
-        loadedProject: s.room.loadedProject,
-        mainScreen: s.room.loadedProject ? "project" : "saver",
+        ...keptRoom(s),
         chairRolled: true,
         chairLayer: "behind",
         sleeping: true,
@@ -434,7 +469,7 @@ export function greetScript(): Script {
     quiet: true,
     async run(d) {
       d.avatar({ pose: "wave", headFacing: "+y" });
-      d.say("Selam! Odama hoş geldin. Raflara bir göz at.");
+      d.say("Selam! Odama hoş geldin. Duvardaki plaklara bir göz at.");
       await d.wait(2200);
       d.avatar({ pose: "type", headFacing: undefined });
     },

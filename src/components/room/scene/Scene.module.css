@@ -92,41 +92,6 @@
   opacity: 1;
 }
 
-.case {
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-.case[data-taken="true"] {
-  opacity: 0;
-  transform: translate(6px, -10px);
-}
-.disc {
-  transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
-}
-.case[data-hot="true"] .disc {
-  transform: translateY(-22px);
-}
-.case[data-hot="true"] {
-  filter: drop-shadow(0 0 6px rgb(255 226 154 / 0.95));
-}
-
-.coverMark {
-  font-family: var(--font-pixel), monospace;
-  font-size: 96px;
-  font-weight: 700;
-}
-.coverText {
-  font-family: var(--font-pixel), monospace;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-.coverIndex {
-  font-family: var(--font-pixel), monospace;
-  font-size: 18px;
-}
-
 .bed[data-hot="true"],
 .tvUnit[data-hot="true"] {
   filter: drop-shadow(0 0 8px rgb(255 226 154 / 0.85));
@@ -240,15 +205,10 @@
 /* ---------- Bitkiler ---------- */
 
 .sway,
-.plantSway,
-.vine {
+.plantSway {
   transform-box: fill-box;
   transform-origin: 50% 100%;
   animation: sway 6.5s ease-in-out infinite;
-}
-.vine {
-  transform-origin: 50% 0;
-  animation-duration: 8s;
 }
 .plantSway {
   animation-duration: 9s;
@@ -612,33 +572,128 @@
   letter-spacing: 2px;
 }
 
-.neonText {
-  font-family: var(--font-body), sans-serif;
-  font-size: 64px;
-  font-weight: 800;
+/* ---------- Plak duvarı ---------- */
+
+.recordFrame {
+  transition: filter 0.2s ease;
+}
+.recordFrame[data-hot="true"] {
+  filter: drop-shadow(0 0 7px rgb(255 226 154 / 0.95));
+}
+.vinyl {
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s ease;
+}
+.recordFrame[data-taken="true"] .vinyl {
+  opacity: 0;
+  transform: translate(26px, -10px);
+}
+.vinylSpin {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.recordFrame[data-hot="true"] .vinylSpin {
+  animation: spin 3.2s linear infinite;
+}
+.vinylGhost {
   fill: none;
-  stroke: #c1a9ff;
-  stroke-width: 4px;
+  stroke: #b9ab9c;
+  stroke-width: 3;
+  stroke-dasharray: 8 8;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.15s;
+}
+.recordFrame[data-taken="true"] .vinylGhost {
+  opacity: 0.8;
+}
+.vinylLabel {
+  font-family: var(--font-pixel), monospace;
+  font-size: 17px;
+  font-weight: 700;
+  fill: #ffffff;
+}
+.frameLabel {
+  font-family: var(--font-pixel), monospace;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  fill: #4a3f5c;
+}
+.sleeveText {
+  font-family: var(--font-pixel), monospace;
+  font-size: 30px;
+  font-weight: 700;
+  fill: #ffffff;
+}
+.bootDisc {
+  animation: spin 1.1s linear infinite;
+}
+.screenTiny {
+  font-family: var(--font-body), sans-serif;
+  font-size: 8px;
+  font-weight: 700;
 }
 
-.neon {
-  animation: neon 13s linear infinite;
+/* ---------- Işık düğmesi ve gece modu ---------- */
+
+.lightSwitch {
+  transition: filter 0.2s ease;
+}
+.lightSwitch[data-hot="true"] {
+  filter: drop-shadow(0 0 7px rgb(255 226 154 / 0.95));
+}
+.rocker {
+  fill: #ffffff;
+  stroke: #d6cfc4;
+  stroke-width: 1.5;
+  transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.lightSwitch[data-on="false"] .rocker {
+  transform: translateY(25px);
+}
+.switchLed {
+  fill: #c6c0b6;
+}
+.lightSwitch[data-on="false"] .switchLed {
+  fill: #7dffb2;
 }
 
-@keyframes neon {
-  0%,
-  91%,
-  95%,
-  100% {
-    opacity: 1;
-  }
-  92% {
-    opacity: 0.35;
-  }
-  93% {
-    opacity: 0.95;
-  }
-  94% {
-    opacity: 0.5;
-  }
+/* Gece gökyüzü penceredeki gündüz göğünün üstüne yumuşakça gelir. */
+.skyNight {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.scene[data-lights="off"] .skyNight {
+  opacity: 1;
+}
+.scene[data-lights="off"] .lightShaft {
+  display: none;
+}
+
+/* Oda silüetini lacivertle çarparak karartır. */
+.nightShade {
+  fill: #4c4a94;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s ease;
+}
+.scene[data-lights="off"] .nightShade {
+  opacity: 1;
+}
+
+/* Lambalar, ekranlar ve ay ışığı karanlığın üstünde yeniden parlar. */
+.nightGlow {
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease 0.15s;
+}
+.scene[data-lights="off"] .nightGlow {
+  opacity: 1;
+}
+
+.star {
+  animation: twinkle 5s ease-in-out infinite;
 }

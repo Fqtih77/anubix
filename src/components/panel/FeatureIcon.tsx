@@ -33,6 +33,13 @@ const ICONS: Record<PanelFeatureId, { d: string; fill: string }[]> = {
     { d: "M7 1h2v3H7z", fill: "#5bb35d" },
     { d: "M4 12h8v3H4z", fill: "#8fdcbc" },
   ],
+  projects: [
+    { d: "M1 1h14v14H1z", fill: "#c96f1f" },
+    { d: "M1 1h14v2H1zM1 1h2v14H1z", fill: "#f0a050" },
+    { d: "M4 4h8v8H4z", fill: "#2a2639" },
+    { d: "M5 6h1v1H5zM6 7h1v1H6zM5 8h1v1H5z", fill: "#7ef0c8" },
+    { d: "M8 9h3v1H8z", fill: "#ffe07a" },
+  ],
 };
 
 export function FeatureIcon({ id }: { id: PanelFeatureId }) {

@@ -1,10 +1,12 @@
 import { type CSSProperties, memo } from "react";
+import { cv } from "@/data/cv";
 import { type Project, STATUS_LABEL } from "@/data/projects";
 import styles from "./QuickLook.module.css";
 
 interface Props {
   projects: Project[];
   onOpenProject: (id: string) => void;
+  onOpenCv: () => void;
   onBackToRoom: () => void;
 }
 
@@ -12,7 +14,7 @@ interface Props {
  * Animasyonsuz hızlı bakış: odadaki her şeye düz bir listeden ulaşılır.
  * Düşük performanslı cihazlar, ekran okuyucular ve aceleci ziyaretçiler için.
  */
-function QuickLookImpl({ projects, onOpenProject, onBackToRoom }: Props) {
+function QuickLookImpl({ projects, onOpenProject, onOpenCv, onBackToRoom }: Props) {
   return (
     <section id="hizli-bakis" className={styles.quick} aria-labelledby="quick-title">
       <div className={styles.inner}>
@@ -21,9 +23,31 @@ function QuickLookImpl({ projects, onOpenProject, onBackToRoom }: Props) {
           Odadaki her şey, tek listede
         </h2>
         <p className={styles.lead}>
-          Anubix dijital çalışma odam. Projelerim raflarda duruyor; buradan tanıtımlarına hızlıca ulaşabilirsin.
+          Anubix dijital çalışma odam. Duvardaki plaklardan biri CV&apos;mi, diğeri projelerimi bilgisayarda açıyor;
+          buradan ikisine de hızlıca ulaşabilirsin.
         </p>
 
+        <section className={styles.cvCard} aria-labelledby="quick-cv-title">
+          <span className={styles.cvDisc} aria-hidden="true">
+            CV
+          </span>
+          <div className={styles.cvText}>
+            <h3 id="quick-cv-title" className={styles.cvName}>
+              {cv.name}
+            </h3>
+            <p className={styles.cvHeadline}>{cv.headline}</p>
+          </div>
+          <div className={styles.cvActions}>
+            <button type="button" className={styles.open} onClick={onOpenCv}>
+              CV&apos;yi aç
+            </button>
+            <a href={cv.pdf} download className={styles.link}>
+              PDF indir <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+        </section>
+
+        <h3 className={styles.subheading}>Projeler</h3>
         <ul className={styles.projects}>
           {projects.map((p, i) => (
             <li key={p.id} className={styles.project} style={{ "--accent": p.accent } as CSSProperties}>

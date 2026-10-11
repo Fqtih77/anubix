@@ -1,0 +1,252 @@
+/* Küçük bir işletim sistemi masaüstü havası: üst menü çubuğu, duvar kâğıdı, klasörler. */
+
+.desktop {
+  position: relative;
+  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(45% 55% at 18% 25%, rgb(255 255 255 / 0.12), transparent 70%),
+    radial-gradient(40% 50% at 85% 80%, rgb(111 211 177 / 0.45), transparent 70%),
+    radial-gradient(50% 60% at 70% 10%, rgb(255 194 166 / 0.28), transparent 70%),
+    linear-gradient(140deg, #2b2163 0%, #5b4bc4 55%, #3fa7a0 100%);
+}
+
+.wallpaper::after {
+  content: "anubix";
+  position: absolute;
+  right: 4%;
+  bottom: 3%;
+  color: rgb(255 255 255 / 0.08);
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(64px, 12vw, 180px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.menubar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 44px;
+  padding: 6px clamp(12px, 2vw, 20px);
+  background: rgb(18 14 40 / 0.55);
+  font-size: 14px;
+  font-weight: 700;
+  backdrop-filter: blur(14px);
+}
+
+.logo {
+  font-weight: 900;
+}
+
+.logo span {
+  color: #b9a8f6;
+}
+
+.menuItem {
+  color: rgb(255 255 255 / 0.75);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.clock {
+  color: rgb(255 255 255 / 0.85);
+  font-variant-numeric: tabular-nums;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.14);
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.back:hover {
+  background: rgb(255 255 255 / 0.24);
+}
+
+.back kbd {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgb(255 255 255 / 0.18);
+  font-size: 11px;
+}
+
+.area {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 18px;
+  height: calc(100% - 44px);
+  padding: clamp(24px, 6vh, 64px) clamp(14px, 4vw, 48px) 24px;
+  overflow-y: auto;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.25);
+}
+
+.empty {
+  max-width: 44ch;
+  margin: 0;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px 16px;
+  width: min(880px, 100%);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.folder {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+  animation: pop 0.4s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
+.grid li:nth-child(2) .folder {
+  animation-delay: 40ms;
+}
+.grid li:nth-child(3) .folder {
+  animation-delay: 80ms;
+}
+.grid li:nth-child(4) .folder {
+  animation-delay: 120ms;
+}
+.grid li:nth-child(n + 5) .folder {
+  animation-delay: 160ms;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+}
+
+.folder:hover {
+  background: rgb(255 255 255 / 0.14);
+  transform: translateY(-3px);
+}
+
+.folder:focus-visible {
+  outline: 3px solid #ffe29a;
+  outline-offset: 2px;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.folderSvg {
+  width: 96px;
+  height: 80px;
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.28));
+}
+
+.folderLetter {
+  fill: #ffffff;
+  font-family: var(--font-pixel), monospace;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.folderName {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.45);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: rgb(255 255 255 / 0.7);
+  font-size: 13px;
+}
+
+/* Proje penceresi: tıklanan klasörün yerinden büyüyerek açılır. */
+.window {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow-y: auto;
+  transform-origin: var(--ox) var(--oy);
+  animation: openWindow 0.42s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+@keyframes openWindow {
+  from {
+    opacity: 0;
+    transform: scale(0.08);
+    border-radius: 24px;
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .menuItem,
+  .clock,
+  .back kbd {
+    display: none;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .folderSvg {
+    width: 76px;
+    height: 64px;
+  }
+
+  .folderName {
+    font-size: 12.5px;
+  }
+}

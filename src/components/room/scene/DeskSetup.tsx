@@ -1,8 +1,7 @@
 import { type CSSProperties, memo, type ReactNode } from "react";
 import { IsoBox, IsoCylinder, IsoDisc, IsoFace, IsoPoly, IsoTop } from "@/components/iso/Iso";
 import { type Box3, box, iso, material } from "@/lib/iso";
-import type { Project } from "@/data/projects";
-import { CHAIR, CHAIR_ROLL, DESK, MONITORS, PC_CASE, SCREENS, type ScreenFace } from "../layout";
+import { CHAIR, CHAIR_ROLL, DESK, MONITORS, PC_CASE, type RecordId, RECORDS, SCREENS, type ScreenFace } from "../layout";
 import { C, M } from "./palette";
 import styles from "./Scene.module.css";
 import { LeftScreen, MainScreen, type MainScreenState, VerticalScreen, type VerticalScreenState } from "./Screens";
@@ -12,16 +11,16 @@ import { LeftScreen, MainScreen, type MainScreenState, VerticalScreen, type Vert
 interface DeskProps {
   mainScreen: MainScreenState;
   verticalScreen: VerticalScreenState;
-  /** Bilgisayara takılı proje */
-  loaded: Project | null;
-  /** Masada duran (takılmış ve elde olmayan) proje kutusu */
-  deskCase: Project | null;
+  /** Bilgisayara takılı plak */
+  loaded: RecordId | null;
+  /** Masada duran plak kapağı (plak bilgisayardayken) */
+  deskRecord: RecordId | null;
   hotId: string | null;
 }
 
 const MONITOR_MAT = { top: "#ebe9f2", left: C.bezel, right: "#d6d3e0" };
 
-export const Desk = memo(function Desk({ mainScreen, verticalScreen, loaded, deskCase, hotId }: DeskProps) {
+export const Desk = memo(function Desk({ mainScreen, verticalScreen, loaded, deskRecord, hotId }: DeskProps) {
   return (
     <g>
       <BackGlow />
@@ -34,7 +33,7 @@ export const Desk = memo(function Desk({ mainScreen, verticalScreen, loaded, des
         <LeftScreen />
       </Monitor>
       <Monitor b={MONITORS.main} screen={SCREENS.main} id="main" hot={hotId === "main-monitor"} lightBar>
-        <MainScreen state={mainScreen} project={loaded} />
+        <MainScreen state={mainScreen} loaded={loaded} />
       </Monitor>
       <Monitor b={MONITORS.vertical} screen={SCREENS.vertical} id="vertical" hot={hotId === "secret-monitor"}>
         <VerticalScreen state={verticalScreen} />
@@ -43,7 +42,7 @@ export const Desk = memo(function Desk({ mainScreen, verticalScreen, loaded, des
       <Keyboard />
       <IsoBox b={DESK.mousePad} m={material("#cfc2fb", 0.3, 0.12)} />
       <IsoBox b={DESK.mouse} m={M.white} soft={2} />
-      {deskCase ? <DeskCase project={deskCase} /> : null}
+      {deskRecord ? <DeskSleeve record={deskRecord} /> : null}
       <Mug />
     </g>
   );
@@ -193,15 +192,19 @@ function DeskPlant() {
   );
 }
 
-/** Takılan projenin kutusu masada yatar: "şu an çalışan proje". */
-function DeskCase({ project }: { project: Project }) {
+/** Plak bilgisayardayken boş kapağı masada yatar: "şu an çalan plak". */
+function DeskSleeve({ record }: { record: RecordId }) {
   const b = DESK.caseSpot;
+  const { color, label } = RECORDS[record];
   return (
     <g className={styles.deskCase}>
-      <IsoBox b={b} m={material(project.accent, 0.35, 0.18)} soft={1} />
+      <IsoBox b={b} m={material(color, 0.35, 0.18)} soft={1} />
       <IsoTop at={[b.x, b.y, b.z + b.h]} k={b.w / 100} kv={b.d / 100}>
-        <rect x={10} y={10} width={80} height={80} rx={6} fill="#ffffff" opacity={0.25} />
-        <circle cx={50} cy={50} r={22} fill="#ffffff" opacity={0.55} />
+        <rect x={8} y={8} width={84} height={84} rx={6} fill="#ffffff" opacity={0.22} />
+        <circle cx={50} cy={50} r={30} fill="none" stroke="#ffffff" strokeOpacity={0.6} strokeWidth={3} />
+        <text x={50} y={58} textAnchor="middle" className={styles.sleeveText}>
+          {label === "CV" ? "CV" : "A"}
+        </text>
       </IsoTop>
     </g>
   );
@@ -209,9 +212,9 @@ function DeskCase({ project }: { project: Project }) {
 
 /* ---------- Bilgisayar kasası ---------- */
 
-export const PcCase = memo(function PcCase({ loaded }: { loaded: Project | null }) {
+export const PcCase = memo(function PcCase({ loaded }: { loaded: RecordId | null }) {
   const b = PC_CASE;
-  const glow = loaded?.accent ?? "#9d8cff";
+  const glow = loaded ? RECORDS[loaded].color : "#9d8cff";
   return (
     <g className={styles.pc} data-loaded={loaded !== null} style={{ "--pc-glow": glow } as CSSProperties}>
       <IsoBox b={b} m={M.white} edge="rgba(255,255,255,0.9)" />

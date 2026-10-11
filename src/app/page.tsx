@@ -1,11 +1,14 @@
+import { connection } from "next/server";
 import { RoomExperience } from "@/components/room/RoomExperience";
-import { projects } from "@/data/projects";
+import { publicProjects } from "@/lib/server/projects";
 
 /**
  * Ana sayfa: izometrik oda.
- * Bu dosya bir Sunucu Bileşenidir; proje verisini okuyup etkileşimli odaya (İstemci
- * Bileşeni) aktarır. Odanın bütün mantığı `src/components/room/` altında.
+ * Bu dosya bir Sunucu Bileşenidir; projeleri veritabanından okuyup etkileşimli odaya
+ * (İstemci Bileşeni) aktarır. Odanın bütün mantığı `src/components/room/` altında.
  */
-export default function Home() {
-  return <RoomExperience projects={projects} />;
+export default async function Home() {
+  // Projeler panelden değiştirilebildiği için sayfa derlemede değil, her istekte hazırlanır.
+  await connection();
+  return <RoomExperience projects={publicProjects()} />;
 }

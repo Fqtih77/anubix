@@ -169,7 +169,7 @@
   font-weight: 900;
 }
 
-.badge[data-status="placeholder"] {
+.badge[data-status="completed"] {
   background: #ffe29a;
 }
 

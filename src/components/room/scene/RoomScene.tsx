@@ -1,20 +1,19 @@
 import { type CSSProperties, memo } from "react";
-import type { Project } from "@/data/projects";
 import { iso } from "@/lib/iso";
 import { Avatar } from "../avatar/Avatar";
 import type { AvatarState } from "../avatar/model";
-import { ROOM, SCENE } from "../layout";
+import { type RecordId, RECORDS, ROOM, SCENE } from "../layout";
 import { BedCorner, BedRug, LightShaft } from "./BedCorner";
 import { ChairPart, Desk, PcCase } from "./DeskSetup";
+import { LightSwitch, NightGlow, NightShade } from "./Lighting";
+import { RecordWall } from "./RecordWall";
 import styles from "./Scene.module.css";
 import type { MainScreenState, TvState, VerticalScreenState } from "./Screens";
-import { Shelves } from "./Shelves";
 import { Curtains, Shell, StringLights, Window } from "./Shell";
 import { Rugs, TvFurniture, TvWall } from "./TvCorner";
 import { WallDecor } from "./WallDecor";
 
 // Yürüyüşte avatar sık güncellenir; diğer SVG katmanları prop değişmedikçe aynı kalır.
-const StableShelves = memo(Shelves);
 const StableTvWall = memo(TvWall);
 const StablePcCase = memo(PcCase);
 const StableDesk = memo(Desk);
@@ -32,16 +31,18 @@ export interface RoomProps {
    * "front" → bütün sandalye önde (avatar sandalyenin arkasından geçiyor).
    */
   chairLayer: "behind" | "backrest" | "front";
-  /** Raftan alınmış kutu */
-  takenProject: string | null;
-  /** Bilgisayara takılı proje */
-  loadedProject: string | null;
+  /** Tablosundan alınmış plak (elde ya da bilgisayarda) */
+  takenRecord: RecordId | null;
+  /** Bilgisayara takılı plak */
+  loadedRecord: RecordId | null;
   mainScreen: MainScreenState;
   verticalScreen: VerticalScreenState;
   tv: TvState;
   headphonesOnTable: boolean;
   controllerOnTable: boolean;
   sleeping: boolean;
+  /** Yatağın yanındaki düğmeyle açılıp kapanan oda ışığı */
+  lights: "on" | "off";
 }
 
 export type IntroPhase = "pending" | "playing" | "done";
@@ -49,18 +50,17 @@ export type IntroPhase = "pending" | "playing" | "done";
 interface RoomSceneProps {
   room: RoomProps;
   avatar: AvatarState;
-  projects: Project[];
   intro: IntroPhase;
   /** Arka plan hareketlerini durdur (bir eyleme odaklanınca) */
   calm: boolean;
   hotId: string | null;
 }
 
-function RoomSceneImpl({ room, avatar, projects, intro, calm, hotId }: RoomSceneProps) {
-  const loaded = projects.find((p) => p.id === room.loadedProject) ?? null;
-  const held = projects.find((p) => p.id === avatar.holding) ?? null;
+function RoomSceneImpl({ room, avatar, intro, calm, hotId }: RoomSceneProps) {
+  const loaded = room.loadedRecord;
+  const held = avatar.holding && avatar.holding in RECORDS ? RECORDS[avatar.holding as RecordId] : null;
   const seatedLayer = room.chairLayer;
-  const sceneStyle = { "--pc-glow": loaded?.accent ?? "#9d8cff" } as CSSProperties;
+  const sceneStyle = { "--pc-glow": loaded ? RECORDS[loaded].color : "#9d8cff" } as CSSProperties;
 
   return (
     <svg
@@ -70,6 +70,7 @@ function RoomSceneImpl({ room, avatar, projects, intro, calm, hotId }: RoomScene
       viewBox={`0 0 ${SCENE.width} ${SCENE.height}`}
       data-intro={intro}
       data-calm={calm}
+      data-lights={room.lights}
       style={sceneStyle}
       aria-hidden="true"
       focusable="false"
@@ -77,7 +78,8 @@ function RoomSceneImpl({ room, avatar, projects, intro, calm, hotId }: RoomScene
       <SceneDefs />
       <g transform={`translate(${SCENE.originX} ${SCENE.originY})`}>
         <StaticRoom />
-        <StableShelves projects={projects} takenId={room.takenProject} hotId={hotId} />
+        <RecordWall taken={room.takenRecord} hotId={hotId} />
+        <LightSwitch on={room.lights === "on"} hot={hotId === "light-switch"} />
         <StableTvWall tv={room.tv} hot={hotId === "tv"} />
 
         {/* Zemindeki mobilyalar: arkadan öne */}
@@ -86,7 +88,7 @@ function RoomSceneImpl({ room, avatar, projects, intro, calm, hotId }: RoomScene
           mainScreen={room.mainScreen}
           verticalScreen={room.verticalScreen}
           loaded={loaded}
-          deskCase={loaded && avatar.holding !== loaded.id ? loaded : null}
+          deskRecord={loaded && avatar.holding !== loaded ? loaded : null}
           hotId={hotId}
         />
         <StableChairPart part="base" rolled={room.chairRolled} hidden={seatedLayer === "front"} />
@@ -101,11 +103,15 @@ function RoomSceneImpl({ room, avatar, projects, intro, calm, hotId }: RoomScene
           hotId={hotId}
         />
 
-        <Avatar state={avatar} caseColor={held?.accent} />
+        <Avatar state={avatar} caseColor={held?.color} />
 
         {/* Avatarın önünde kalması gereken sandalye parçaları */}
         <StableChairPart part="base" rolled={room.chairRolled} hidden={seatedLayer !== "front"} />
         <StableChairPart part="backrest" rolled={room.chairRolled} hidden={seatedLayer === "behind"} />
+
+        {/* Işıklar kapanınca: önce karart, sonra ışık kaynaklarını parlat */}
+        <NightShade />
+        <NightGlow mainScreen={room.mainScreen} tv={room.tv} loaded={loaded} />
       </g>
     </svg>
   );
@@ -166,6 +172,14 @@ const SceneDefs = memo(function SceneDefs() {
       <linearGradient id="rm-ao-corner" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={CORNER_AO_X} y2="0">
         <stop offset="0" stopColor="#5b4a6b" stopOpacity="0.1" />
         <stop offset="1" stopColor="#5b4a6b" stopOpacity="0" />
+      </linearGradient>
+      <linearGradient id="rm-night-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#3a4a9e" />
+        <stop offset="1" stopColor="#6b6fc2" />
+      </linearGradient>
+      <linearGradient id="rm-desktop" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#5b4bc4" />
+        <stop offset="1" stopColor="#3fa7a0" />
       </linearGradient>
       <linearGradient id="rm-sky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" className={styles.skyTop} />
@@ -243,13 +257,6 @@ const SceneDefs = memo(function SceneDefs() {
         <stop offset="0.7" stopColor="#5b4a8a" stopOpacity="0.08" />
         <stop offset="1" stopColor="#5b4a8a" stopOpacity="0" />
       </radialGradient>
-      <filter id="rm-neon" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
     </defs>
   );
 });

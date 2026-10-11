@@ -11,18 +11,19 @@ interface Props {
   projectId: string;
   onSwitch: (id: string) => void;
   onClose: () => void;
+  /** Geri düğmesinin yazısı (masaüstünden açıldığında "Masaüstü") */
+  backLabel?: string;
 }
 
 const nn = (n: number) => String(n).padStart(2, "0");
 
 /** Oyun seçme ekranı havasında proje tanıtımı. */
-export function ProjectShowcase({ projects, projectId, onSwitch, onClose }: Props) {
+export function ProjectShowcase({ projects, projectId, onSwitch, onClose, backLabel = "Odaya dön" }: Props) {
   const index = Math.max(
     0,
     projects.findIndex((p) => p.id === projectId),
   );
   const project = projects[index];
-  const placeholder = project.status === "placeholder";
 
   useEffect(() => {
     const go = (delta: number) => onSwitch(projects[(index + delta + projects.length) % projects.length].id);
@@ -47,7 +48,7 @@ export function ProjectShowcase({ projects, projectId, onSwitch, onClose }: Prop
       <div className={styles.bg} aria-hidden="true" />
       <header className={styles.top}>
         <button type="button" className={styles.back} onClick={onClose}>
-          <span aria-hidden="true">←</span> Odaya dön <kbd>Esc</kbd>
+          <span aria-hidden="true">←</span> {backLabel} <kbd>Esc</kbd>
         </button>
         <p className={styles.counter}>
           PROJE {nn(index + 1)} / {nn(projects.length)}
@@ -67,7 +68,8 @@ export function ProjectShowcase({ projects, projectId, onSwitch, onClose }: Prop
           <div className={styles.disc} aria-hidden="true" />
           <div className={styles.cover}>
             {project.image ? (
-              <Image src={project.image.src} alt={project.image.alt} fill sizes="(max-width: 760px) 80vw, 420px" />
+              // Görseller panelden yüklenip API'den sunulur; Next'in görsel işleyicisine gerek yok.
+              <Image src={project.image.src} alt={project.image.alt} fill sizes="(max-width: 760px) 80vw, 420px" unoptimized />
             ) : (
               <ProjectCover project={project} className={styles.coverArt} />
             )}
@@ -101,7 +103,7 @@ export function ProjectShowcase({ projects, projectId, onSwitch, onClose }: Prop
             ) : null}
             {project.planned.length > 0 ? (
               <section>
-                <h3>{placeholder ? "Eklenecek bilgiler" : "Planlanan (henüz yok)"}</h3>
+                <h3>Planlanan (henüz yok)</h3>
                 <ul data-planned="true">
                   {project.planned.map((item) => (
                     <li key={item}>{item}</li>
@@ -146,7 +148,7 @@ export function ProjectShowcase({ projects, projectId, onSwitch, onClose }: Prop
               <button
                 type="button"
                 aria-current={p.id === project.id ? "true" : undefined}
-                aria-label={`${p.title}${p.status === "placeholder" ? " (örnek proje)" : ""}`}
+                aria-label={p.title}
                 onClick={() => onSwitch(p.id)}
                 style={{ "--slot": p.accent } as CSSProperties}
               >
@@ -156,7 +158,7 @@ export function ProjectShowcase({ projects, projectId, onSwitch, onClose }: Prop
           ))}
         </ul>
         <p className={styles.hint}>
-          <kbd>←</kbd> <kbd>→</kbd> proje değiştir · <kbd>Esc</kbd> odaya dön
+          <kbd>←</kbd> <kbd>→</kbd> proje değiştir · <kbd>Esc</kbd> {backLabel.toLocaleLowerCase("tr-TR")}
         </p>
       </footer>
     </div>

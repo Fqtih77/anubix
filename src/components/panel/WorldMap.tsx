@@ -1,7 +1,19 @@
 import { type CSSProperties, memo } from "react";
 import { IsoBox, IsoFace, IsoTop } from "@/components/iso/Iso";
 import type { PanelFeatureId } from "@/data/panelFeatures";
-import { type Box3, box, boundsOf, boxCorners, inflate, isoP, type Material, type P2, seeded, silhouette } from "@/lib/iso";
+import {
+  type Box3,
+  box,
+  boundsOf,
+  boxCorners,
+  inflate,
+  isoP,
+  type Material,
+  type P2,
+  type P3,
+  seeded,
+  silhouette,
+} from "@/lib/iso";
 import styles from "./WorldMap.module.css";
 
 /**
@@ -46,6 +58,7 @@ const M = {
   gold: { top: "#ffe07a", left: "#f2c94c", right: "#d8ab2c" } satisfies Material,
   mint: { top: "#b9f0d6", left: "#8fdcbc", right: "#6fc4a0" } satisfies Material,
   white: { top: "#ffffff", left: "#eeeef6", right: "#d9d8e6" } satisfies Material,
+  command: { top: "#f0a050", left: "#d9802f", right: "#b9661f" } satisfies Material,
 };
 
 interface Cell {
@@ -106,7 +119,11 @@ const STRUCTURES: Structure[] = [
   { id: "quests", hit: [box(7.0, 1.2, 1, 2.0, 0.4, 2.7)] },
   { id: "storage", hit: [box(2.05, 6.1, 1, 1.15, 0.95, 1.05)] },
   { id: "assistant", hit: [box(5.95, 5.0, 1, 1.15, 1.15, 2.9)] },
+  { id: "projects", hit: [box(10.06, 8.06, 2, 0.88, 0.88, 1.5)] },
 ];
+
+/** Komut bloğu adanın ön köşesindeki tepede durur. */
+const COMMAND = box(10.08, 8.08, 2, 0.84, 0.84, 0.84);
 
 /** Haritanın görünür sınırları (viewBox): adanın ve ağaçların gerçek sınırı + küçük pay. */
 const VIEW = (() => {
@@ -182,6 +199,7 @@ function WorldMapImpl({ phase, labels, hot, onOpen, onHot }: Props) {
           {TREES_FRONT.map((t) => (
             <Tree key={`${t.x}-${t.y}`} spot={t} />
           ))}
+          <CommandBlock hot={hot === "projects"} />
         </g>
       </svg>
 
@@ -392,6 +410,47 @@ function Campfire() {
         <path className={styles.fire} d="M0,6 C-6,2 -4,-8 0,-12 C2,-6 6,-6 4,-14 C10,-6 8,2 0,6 Z" fill="#ffe07a" />
       </g>
     </g>
+  );
+}
+
+/** Komut bloğu: projeleri koda dokunmadan eklediğim yer. Yanlarında yanıp sönen bir komut satırı var. */
+function CommandBlock({ hot }: { hot: boolean }) {
+  const b = COMMAND;
+  const [px, py] = isoP([b.x + b.w / 2, b.y + b.d / 2, b.z + b.h + 0.5]);
+  return (
+    <g className={`${styles.structure} ${styles.command}`} data-hot={hot}>
+      <IsoBox b={b} m={M.command} />
+      <IsoTop at={[b.x, b.y, b.z + b.h + 0.001]} k={b.w / 100} kv={b.d / 100}>
+        <rect x={12} y={12} width={76} height={76} fill="#e08a3c" />
+        <rect x={30} y={30} width={40} height={40} fill="#b9661f" />
+        <rect x={42} y={42} width={16} height={16} fill="#ffe07a" />
+      </IsoTop>
+      <CommandFace plane="y" at={[b.x, b.y + b.d, b.z + b.h]} k={b.w / 100} kv={b.h / 100} />
+      <CommandFace plane="x" at={[b.x + b.w, b.y + b.d, b.z + b.h]} k={b.d / 100} kv={b.h / 100} />
+      {/* Üstünde süzülen "+": yeni proje ekleme yeri olduğunu anlatır */}
+      <g transform={`translate(${px} ${py})`}>
+        <g className={styles.commandPlus}>
+          <rect x={-3} y={-10} width={6} height={20} fill="#ffe07a" />
+          <rect x={-10} y={-3} width={20} height={6} fill="#ffe07a" />
+          <rect x={-3} y={-3} width={6} height={6} fill="#fff6c9" />
+        </g>
+      </g>
+    </g>
+  );
+}
+
+function CommandFace({ plane, at, k, kv }: { plane: "x" | "y"; at: P3; k: number; kv: number }) {
+  return (
+    <IsoFace plane={plane} at={at} k={k} kv={kv}>
+      <rect x={8} y={8} width={84} height={84} fill="#ffffff" opacity={0.12} />
+      <rect x={16} y={18} width={68} height={56} fill="#2a2639" />
+      <g className={styles.commandScreen}>
+        <path d="M24 30h6v6h-6zM30 36h6v6h-6zM24 42h6v6h-6z" fill="#7ef0c8" />
+        <rect x={40} y={52} width={10} height={6} fill="#7ef0c8" />
+        <rect className={styles.commandCursor} x={54} y={52} width={14} height={6} fill="#ffe07a" />
+      </g>
+      <rect x={16} y={80} width={68} height={6} fill="#9c5418" />
+    </IsoFace>
   );
 }
 
