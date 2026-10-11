@@ -17,14 +17,14 @@ export type Activity = "desk" | "gaming" | "sleeping";
  * Tam ekran açılan katman. `direct: true` → sayfa altındaki listeden açıldı,
  * monitörden büyüme animasyonu olmadan gelir.
  */
-export type Overlay = { kind: "project"; projectId: string; direct?: boolean } | { kind: "login"; direct?: boolean };
+export type Overlay = { kind: "project"; projectId: string; direct?: boolean } | { kind: "login"; direct?: boolean } | { kind: "game"; direct?: boolean };
 
 export interface RoomState {
   avatar: AvatarState;
   room: RoomProps;
   activity: Activity;
   overlay: Overlay | null;
-  /** Ekran okuyucuya ve alt bilgi kartına giden kısa durum metni */
+  /** Ekran okuyucuya ve küçük durum alanına giden kısa metin */
   status: string;
   /** Avatarın konuşma balonu */
   bubble: { text: string; id: number } | null;

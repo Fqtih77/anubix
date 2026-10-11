@@ -17,7 +17,7 @@ interface HudProps {
   showExploreHint: boolean;
 }
 
-/** Odanın üst çubuğu ve alt paneli: bölge gezinmesi, durum kartı, atlama düğmesi. */
+/** Odanın üst çubuğu ve alt gezinmesi. */
 function RoomHudImpl({
   regionIndex,
   onRegion,
@@ -30,8 +30,7 @@ function RoomHudImpl({
   onToggleMotion,
   showExploreHint,
 }: HudProps) {
-  const region = REGIONS[regionIndex] ?? REGIONS[0];
-  const busyCard = running || activity !== "desk";
+  const busy = running || activity !== "desk";
   return (
     <>
       <header className={styles.topbar}>
@@ -52,42 +51,23 @@ function RoomHudImpl({
         </nav>
       </header>
 
-      {showExploreHint ? (
-        <p className={styles.explore}>
-          <span aria-hidden="true">✦</span> Odayı keşfet: kaydır ya da parlayan nesnelere tıkla
-        </p>
-      ) : null}
-
       <div className={styles.bottom}>
-        <section className={styles.card} aria-live="polite" aria-atomic="true">
-          {busyCard ? (
-            <>
-              <p className={styles.kicker}>
-                {running ? "Sahne oynuyor" : activity === "gaming" ? "Mola modu" : "Dinlenme"}
-              </p>
-              <p className={styles.text}>{status || "…"}</p>
-              <div className={styles.actions}>
-                {running ? (
-                  <button type="button" className={styles.primary} onClick={onSkip}>
-                    Animasyonu atla <kbd>Esc</kbd>
-                  </button>
-                ) : (
-                  <button type="button" className={styles.primary} onClick={onReturn}>
-                    Masaya dön <kbd>Esc</kbd>
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <p className={styles.kicker}>
-                {String(regionIndex + 1).padStart(2, "0")} / {String(REGIONS.length).padStart(2, "0")}
-              </p>
-              <h2 className={styles.title}>{region.title}</h2>
-              <p className={styles.text}>{region.text}</p>
-            </>
-          )}
-        </section>
+        <div className={styles.left} aria-live="polite" aria-atomic="true">
+          {busy ? (
+            <div className={styles.busy}>
+              <span className={styles.status}>{status || (activity === "gaming" ? "Mola modu" : "Dinlenme")}</span>
+              {running ? (
+                <button type="button" className={styles.primary} onClick={onSkip}>Animasyonu atla</button>
+              ) : (
+                <button type="button" className={styles.primary} onClick={onReturn}>Masaya dön</button>
+              )}
+            </div>
+          ) : showExploreHint ? (
+            <p className={styles.explore}>
+              <span aria-hidden="true">✦</span> Odayı keşfet: kaydır ya da parlayan nesnelere tıkla
+            </p>
+          ) : null}
+        </div>
 
         <nav className={styles.regions} aria-label="Oda bölgeleri">
           <ul>

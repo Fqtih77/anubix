@@ -230,7 +230,7 @@ export function mainMonitorScript(loaded: string | null): Script {
 /* ---------- Mola köşesi ---------- */
 
 /**
- * Pufa / televizyona tıklanınca. Avatar zaten oyun oynuyorsa aynı tıklama molayı bitirir.
+ * Pufa / televizyona tıklanınca. Avatar zaten oyun oynuyorsa pufa tıklamak molayı bitirir.
  * `current`: senaryo oluşturulduğu andaki uğraş.
  */
 export function chillScript(current: Activity): Script {
@@ -278,7 +278,8 @@ export function chillScript(current: Activity): Script {
       await d.wait(1400);
       d.room({ tv: "chill" });
       d.activity("gaming");
-      d.status("Mola modu açık. Bitirmek için “Masaya dön”.");
+      d.status("Yarış başlıyor!");
+      d.open({ kind: "game" });
     },
     finish(d) {
       const s = d.state();
@@ -295,8 +296,24 @@ export function chillScript(current: Activity): Script {
       });
       d.avatar({ ...SEATED_AVATAR, pose: "lounge", pos: SPOTS.beanSeat, facing: "-x", headphones: true });
       d.activity("gaming");
-      d.status("Mola modu açık. Bitirmek için “Masaya dön”.");
+      d.status("Yarış başlıyor!");
       d.cameraJump("tvAction");
+      d.open({ kind: "game" });
+    },
+  };
+}
+
+/** Avatar pufundayken TV'ye tekrar basılırsa yarış ekranı yeniden açılır. */
+export function resumeGameScript(): Script {
+  return {
+    id: "resume-game",
+    async run(d) {
+      await d.camera("tvAction");
+      d.open({ kind: "game" });
+    },
+    finish(d) {
+      d.cameraJump("tvAction");
+      d.open({ kind: "game" });
     },
   };
 }

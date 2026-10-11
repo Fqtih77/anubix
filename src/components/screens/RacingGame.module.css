@@ -1,0 +1,271 @@
+.game {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  padding: max(12px, env(safe-area-inset-top)) 18px max(10px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 15%, #203e5c 0, transparent 45%),
+    linear-gradient(160deg, #111b30 0%, #09111f 100%);
+  color: #f7f5ee;
+  font-family: var(--font-body), sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.eyebrow {
+  color: #ee877a;
+  font-family: var(--font-pixel), monospace;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+}
+
+.header h2 {
+  margin: 1px 0 0;
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(23px, 4vw, 35px);
+  line-height: 1;
+}
+
+.close {
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid #8696af;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus-visible,
+.steer:hover,
+.steer:focus-visible {
+  background: rgb(255 255 255 / 0.2);
+}
+
+.dashboard {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(100%, 760px);
+  margin: 12px auto 8px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #a9bdd1;
+}
+
+.dashboard span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dashboard strong {
+  color: #ffffff;
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(15px, 3vw, 21px);
+  letter-spacing: 0;
+}
+
+.dashboard span:nth-child(3) strong {
+  color: #ef7775;
+}
+
+.playArea {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+}
+
+.track {
+  position: relative;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 5 / 8;
+  overflow: hidden;
+  border: 3px solid #7a8da5;
+  border-radius: 16px;
+  box-shadow: 0 16px 50px rgb(0 0 0 / 0.36), 0 0 0 5px rgb(255 255 255 / 0.06);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgb(4 12 23 / 0.56);
+}
+
+.overlayCard {
+  width: min(100%, 300px);
+  padding: 23px 20px;
+  border: 1px solid #a5b7c9;
+  border-radius: 18px;
+  background: #15243a;
+  text-align: center;
+  box-shadow: 0 16px 42px rgb(0 0 0 / 0.4);
+}
+
+.flag {
+  display: block;
+  color: #ee877a;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.overlayCard h3 {
+  margin: 8px 0 6px;
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(20px, 4vw, 27px);
+}
+
+.overlayCard p {
+  margin: 0 0 18px;
+  color: #d4dce7;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.start {
+  min-height: 46px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 11px;
+  background: #f35b55;
+  color: #161827;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #a92f32;
+}
+
+.start:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #a92f32;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(100%, 540px);
+  min-height: 72px;
+  margin: 6px auto 0;
+}
+
+.footer p {
+  margin: 0;
+  color: #c6d3e0;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.steer {
+  flex: 0 0 74px;
+  min-height: 58px;
+  border: 1px solid #8ca1b4;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.08);
+  color: #ffffff;
+  font-size: 27px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.mobileHint {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .game {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .header h2 {
+    font-size: 24px;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+  }
+
+  .dashboard {
+    gap: 4px;
+    margin-top: 10px;
+    font-size: 9px;
+  }
+
+  .footer {
+    gap: 8px;
+  }
+
+  .footer p {
+    font-size: 11px;
+  }
+
+  .steer {
+    flex-basis: 66px;
+  }
+
+  .mobileHint {
+    display: inline;
+  }
+
+  .desktopHint {
+    display: none;
+  }
+}
+
+@media (max-height: 600px) {
+  .game {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .dashboard {
+    margin: 5px auto;
+  }
+
+  .footer {
+    min-height: 48px;
+  }
+
+  .steer {
+    min-height: 44px;
+  }
+
+  .overlayCard {
+    padding: 10px;
+  }
+
+  .overlayCard p {
+    margin-bottom: 9px;
+  }
+}

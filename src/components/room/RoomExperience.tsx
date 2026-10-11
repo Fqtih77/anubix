@@ -4,6 +4,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState, 
 import { QuickLook } from "@/components/home/QuickLook";
 import { LoginScreen } from "@/components/screens/LoginScreen";
 import { ProjectShowcase } from "@/components/screens/ProjectShowcase";
+import { RacingGame } from "@/components/screens/RacingGame";
 import { ScreenDialog, type ScreenCorners } from "@/components/screens/ScreenDialog";
 import type { Project } from "@/data/projects";
 import { type Box3, box, clamp, faceCorners, inflate, iso, type P2, silhouette } from "@/lib/iso";
@@ -23,6 +24,7 @@ import {
   mainMonitorScript,
   projectScript,
   restScript,
+  resumeGameScript,
   type Script,
   WALK_SPEED,
   wakeScript,
@@ -263,8 +265,8 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
       {
         id: "bean-bag",
         label: "Puf",
-        hint: "Mola ver",
-        ariaLabel: "Puf: avatar pufa geçer, kulaklığını takar ve televizyonda mola modunu açar",
+        hint: "Yarışa geç",
+        ariaLabel: "Puf: avatar pufa geçer, kulaklığını takar ve yarış oyununu açar",
         region: "tv",
         polygon: toWorldPolygon([box(8.55, 11.45, 0, 3.5, 3.5, 2.3)], 2),
         marker: "spark",
@@ -272,8 +274,8 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
       {
         id: "tv",
         label: "Televizyon",
-        hint: "Mola modu",
-        ariaLabel: "Televizyon: mola modunu aç",
+        hint: "Yarışı aç",
+        ariaLabel: "Televizyon: yarış oyununu aç",
         region: "tv",
         polygon: toWorldPolygon([TV_CORNER.tv], 6),
       },
@@ -300,7 +302,8 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
         else backToDesk();
       } else if (id === "main-monitor") void run(mainMonitorScript(store.get().room.loadedProject));
       else if (id === "secret-monitor") void run(loginScript());
-      else if (id === "bean-bag" || id === "tv") void run(chillScript(activity));
+      else if (id === "bean-bag") void run(chillScript(activity));
+      else if (id === "tv") void run(activity === "gaming" ? resumeGameScript() : chillScript(activity));
       else if (id === "bed") void run(restScript(activity));
       else if (id.startsWith("project:")) {
         const projectId = id.slice("project:".length);
@@ -345,7 +348,7 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
   const overlayOrigin = useCallback((): ScreenCorners | null => {
     const overlay = store.get().overlay;
     if (!overlay || overlay.direct) return null;
-    const face = overlay.kind === "login" ? SCREENS.vertical : SCREENS.main;
+    const face = overlay.kind === "login" ? SCREENS.vertical : overlay.kind === "game" ? SCREENS.tv : SCREENS.main;
     const c = faceCorners(face.plane, face.at, face.w, face.h);
     const toClient = (p: P2) => camera.worldToClient([p[0] + SCENE.originX, p[1] + SCENE.originY]);
     return { tl: toClient(c.tl), tr: toClient(c.tr), bl: toClient(c.bl) };
@@ -624,6 +627,17 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
           onClosed={onOverlayClosed}
         >
           {(close) => <LoginScreen onClose={close} reduced={reduced} />}
+        </ScreenDialog>
+      ) : null}
+      {overlay?.kind === "game" ? (
+        <ScreenDialog
+          label="Anubix yarış oyunu"
+          veil="#101c32"
+          origin={overlayOrigin}
+          reduced={reduced}
+          onClosed={onOverlayClosed}
+        >
+          {(close) => <RacingGame onClose={close} />}
         </ScreenDialog>
       ) : null}
     </main>

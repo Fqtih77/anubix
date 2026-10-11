@@ -157,7 +157,7 @@ Yerel `npm run dev` bu adresle çalışır. Docker Compose, Ollama için varsay�
 - **Kaydırma turu:** Sayfayı kaydırdıkça kamera sırayla *Masa → Raflar → Mola → Yatak → Tüm oda* bölgelerine geçer. Tarayıcının normal kaydırması kullanılır, tekerlek ele geçirilmez. Turun sonunda animasyonsuz **hızlı liste** gelir.
 - **Bölge düğmeleri:** Alttaki *Masa / Raflar / Mola / Yatak / Tüm oda* düğmeleri. Telefonda yatay kaydırma (swipe), masaüstünde ← → tuşları da çalışır.
 - **Proje rafları:** Her proje bir kutu/disk. Tıklayınca avatar kalkar, rafa gider, kutuyu alır, bilgisayar kasasına takar, masasına döner; ana monitörde proje açılır ve ekran büyüyerek oyun seçme ekranı havasında **proje tanıtımına** dönüşür. Aynı proje zaten takılıysa avatar yeniden yürümez, ekran doğrudan açılır.
-- **Mola köşesi:** Pufa veya televizyona tıklayınca avatar pufa geçer, kulaklığını takar, kumandayı alır; televizyonda özgün bir "mola modu" sahnesi oynar. Tekrar tıklamak veya "Masaya dön" molayı bitirir.
+- **Mola köşesi ve yarış:** Pufa veya televizyona tıklayınca avatar pufa geçer, kulaklığını takar, kumandayı alır; televizyon tam ekrana büyüyüp özgün, F1 havasında bir 2D yarış açar. Ok tuşları veya A/D ile sür; telefonda ekrandaki tuşlara basılı tut ya da pistte parmağını sürükle. Rakiplerden kaçarken puan ve geçiş sayısı artar; üç çarpışmada yarış biter. Rekor yalnızca o tarayıcıda saklanır. Oyunu kapatınca avatar pufunda kalır; TV'ye yeniden basarak tekrar açabilir veya "Masaya dön" ile molayı bitirebilirsin.
 - **Yatak:** Kısa bir şekerleme sahnesi; avatar birkaç saniye sonra kendiliğinden kalkıp masasına döner.
 - **Gizli monitör:** Dikey monitörde arada bir parlayan küçük bir anahtar ipucu var. Tıklayınca avatar fareye uzanır, ekran büyür ve **giriş ekranı** açılır.
 - **Avatar:** Masadayken avatara tıklayınca el sallar. Boştayken nefes alır, göz kırpar, arada omzunun üstünden bakar, gerinir; uzun süre kimse dokunmazsa kısa bir şekerlemeye gider.
@@ -195,6 +195,8 @@ Oda tek bir büyük SVG'dir; 3B motor (WebGL) kullanılmadı. Sabit izometrik a�
 8. **Tam ekran geçişi (`src/components/screens/ScreenDialog.tsx`)**: Doğal `<dialog>`. Açılırken içerik önce monitörün izometrik paralelkenarına matrisle yerleşir, sonra adım adım tam ekrana açılır.
 
 Animasyonlar mümkün olduğunca `transform` ve `opacity` ile yapılır. Arka plan hareketleri (bulutlar, perde, bitkiler, ekran koruyucular) uzun ve sakin döngülerdir; bir sahne oynarken ya da tam ekran açıkken durur, böylece dikkat eyleme toplanır.
+
+Yarış, ek kütüphane kullanmadan Canvas 2D ile çizilir. Oyun açık değilken çizim döngüsü çalışmaz; açıkken puan göstergesi seyrek güncellenir. Sol alttaki büyük bölge bilgi kartı kaldırıldı; keşif ipucu aynı köşede küçük bir etiket olarak görünür.
 
 ## Neyi nereden değiştiririm?
 
