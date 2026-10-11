@@ -37,5 +37,5 @@ if (!/^[a-zA-Z0-9_.-]{3,40}$/.test(username) || password.length < 12 || password
 }
 const salt = randomBytes(16);
 const hash = scryptSync(password, salt, 64).toString("hex");
-writeFileSync(target, `ANUBIX_ADMIN_USERNAME=${username}\nANUBIX_ADMIN_PASSWORD_HASH=${salt.toString("hex")}:${hash}\nANUBIX_HTTPS=false\n# OLLAMA_BASE_URL=http://127.0.0.1:11434\n# OLLAMA_MODEL=\n`, { mode: 0o600, flag: "wx" });
+writeFileSync(target, `ANUBIX_ADMIN_USERNAME=${username}\nANUBIX_ADMIN_PASSWORD_HASH=${salt.toString("hex")}:${hash}\nANUBIX_HTTPS=false\n# OLLAMA_BASE_URL=http://127.0.0.1:11434\n# OLLAMA_MODEL=\n# RESEND_API_KEY=\n# ANUBIX_MAIL_FROM=Anubix <hatirlatma@bildirim.anubix.dev>\n# ANUBIX_MAIL_TO=\n# ANUBIX_MAIL_TIME_ZONE=Europe/Istanbul\n# ANUBIX_MAIL_HOUR=9\n`, { mode: 0o600, flag: "wx" });
 console.log(".env.local oluşturuldu. Parola yalnızca hash olarak kaydedildi.");

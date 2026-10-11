@@ -1,12 +1,21 @@
 services:
   web:
-    build: .
+    build: &anubix_build .
     env_file: .env.local
     environment:
       ANUBIX_DATA_DIR: /app/data
       OLLAMA_BASE_URL: http://host.docker.internal:11434
     ports:
       - "3005:3005"
+    volumes:
+      - anubix_data:/app/data
+    restart: unless-stopped
+  mail:
+    build: *anubix_build
+    env_file: .env.local
+    environment:
+      ANUBIX_DATA_DIR: /app/data
+    command: ["node", "scripts/mail-worker.mjs"]
     volumes:
       - anubix_data:/app/data
     restart: unless-stopped

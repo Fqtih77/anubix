@@ -5,7 +5,6 @@ import styles from "./QuickLook.module.css";
 interface Props {
   projects: Project[];
   onOpenProject: (id: string) => void;
-  onOpenLogin: () => void;
   onBackToRoom: () => void;
 }
 
@@ -13,7 +12,7 @@ interface Props {
  * Animasyonsuz hızlı bakış: odadaki her şeye düz bir listeden ulaşılır.
  * Düşük performanslı cihazlar, ekran okuyucular ve aceleci ziyaretçiler için.
  */
-function QuickLookImpl({ projects, onOpenProject, onOpenLogin, onBackToRoom }: Props) {
+function QuickLookImpl({ projects, onOpenProject, onBackToRoom }: Props) {
   return (
     <section id="hizli-bakis" className={styles.quick} aria-labelledby="quick-title">
       <div className={styles.inner}>
@@ -22,7 +21,7 @@ function QuickLookImpl({ projects, onOpenProject, onOpenLogin, onBackToRoom }: P
           Odadaki her şey, tek listede
         </h2>
         <p className={styles.lead}>
-          Anubix kişisel dijital alanım. Projelerim raflarda duruyor; kişisel araçlarıma giriş yaparak ulaşıyorum.
+          Anubix dijital çalışma odam. Projelerim raflarda duruyor; buradan tanıtımlarına hızlıca ulaşabilirsin.
         </p>
 
         <ul className={styles.projects}>
@@ -57,18 +56,6 @@ function QuickLookImpl({ projects, onOpenProject, onOpenLogin, onBackToRoom }: P
             </li>
           ))}
         </ul>
-
-        <div className={styles.secret}>
-          <div>
-            <h3 className={styles.secretTitle}>Kişisel alan</h3>
-            <p>
-              Girişi odadaki dik duran monitörde saklı. Bulamadıysan buradan da açabilirsin.
-            </p>
-          </div>
-          <button type="button" className={styles.open} onClick={onOpenLogin}>
-            Girişi aç
-          </button>
-        </div>
 
         <footer className={styles.footer}>
           <span>© 2026 Anubix · MIT lisansı</span>

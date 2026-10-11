@@ -594,7 +594,6 @@ export function RoomExperience({ projects }: { projects: Project[] }) {
       <QuickLook
         projects={projects}
         onOpenProject={(id) => openDirect({ kind: "project", projectId: id })}
-        onOpenLogin={() => openDirect({ kind: "login" })}
         onBackToRoom={() => goRegion(0)}
       />
 

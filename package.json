@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "PORT=3005 node .next/standalone/server.js",
     "setup": "node scripts/setup.mjs",
+    "mail:worker": "node scripts/mail-worker.mjs",
+    "mail:check": "node scripts/mail-worker.mjs --once",
+    "test:mail": "node --test scripts/mail-worker.test.mjs",
     "lint": "biome lint src next.config.ts",
     "typecheck": "tsc --noEmit"
   },

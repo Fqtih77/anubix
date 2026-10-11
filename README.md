@@ -2,7 +2,7 @@
 
 **Anubix**, CV'mi, projelerimi, başarılarımı ve hesaplarımı bir araya getirmek için adım adım geliştirdiğim kişisel platform. İzometrik bir oda üzerinden projelerime ulaşılır; özel panelde planlayıcı, not defteri, takvim/anımsatıcı ve kişisel dosya alanı bulunur. Bix asistanı, ayrıca kurulan yerel bir dil modeline bağlanabilir.
 
-> **Durum (v0.3):** Herkese açık izometrik oda ve oturumla korunan kişisel panel çalışır. Notlar, görevler, takvim ve dosyalar kalıcı SQLite verisi kullanır. Bix, yerel Ollama modeli ayarlanırsa sohbet eder. E-posta/push bildirimi, otomatik yedekleme ve bulut yayını henüz yoktur.
+> **Durum (v0.4):** Herkese açık izometrik oda ve oturumla korunan kişisel panel çalışır. Notlar, görevler, takvim ve dosyalar kalıcı SQLite verisi kullanır. İsteğe bağlı Resend ayarlarıyla yalnızca yöneticiye günlük hatırlatma özeti gönderilir. Bix, yerel Ollama modeli ayarlanırsa sohbet eder. Push bildirimi, otomatik yedekleme ve bulut yayını henüz yoktur.
 
 ## İçindekiler
 
@@ -11,6 +11,7 @@
 - [Hızlı başlangıç](#hızlı-başlangıç)
 - [Docker ile çalıştırma](#docker-ile-çalıştırma)
 - [Kişisel paneli kurma](#kişisel-paneli-kurma)
+- [Yalnızca yöneticiye e-posta hatırlatmaları](#yalnızca-yöneticiye-e-posta-hatırlatmaları)
 - [Bix yerel model bağlantısı](#bix-yerel-model-bağlantısı)
 - [Sitede neler var?](#sitede-neler-var)
 - [Neler gerçekten çalışıyor, neler bekliyor?](#neler-gerçekten-çalışıyor-neler-bekliyor)
@@ -45,6 +46,7 @@ Bu proje bir öğrenme alanı. Ön yüzde izometrik bir çalışma odası var; a
 | Biome | Kod kalitesi kontrolü |
 | SQLite (`node:sqlite`) | Tek kullanıcılı kalıcı not, görev, etkinlik, oturum ve dosya kaydı |
 | Ollama (isteğe bağlı) | Yerel model ile Bix sohbeti |
+| Resend (isteğe bağlı) | Günlük görev ve takvim özetini yöneticinin adresine gönderme |
 | Docker / Compose | Kalıcı veri birimiyle uygulamayı konteynerde çalıştırma |
 
 Next.js, React üzerine kurulu bir çatı olduğu için "React ile geliştirme" hedefiyle uyumludur. SQLite modülü için **Node.js 22.13+** gerekir; Docker imajında Node.js 22 kullanılır.
@@ -68,6 +70,7 @@ npm run lint       # Biome kod kontrolü
 npm run typecheck  # TypeScript tür kontrolü
 npm run build      # Üretim derlemesi
 npm run start      # Derlenmiş uygulamayı 3005'te başlatır; önce build gerekir
+npm run test:mail  # Günlük e-posta özeti ve tekrar gönderim testleri
 ```
 
 `npm ci`, `package-lock.json` içindeki sürümleri kullanır. Yeni paket eklerken `npm install paket-adi` komutunu kullan ve hem `package.json` hem `package-lock.json` değişikliklerini commit et. `npm run setup` parolayı terminalde gizli alır ve yalnızca scrypt hash değerini `.env.local` içine yazar. Bu dosyayı Git’e ekleme.
@@ -88,15 +91,34 @@ docker compose up --build
 
 Ardından `http://localhost:3005` adresini aç. Durdurmak için terminalde `Ctrl+C`, arka planda başlatıldıysa `docker compose down` kullan. Port 3005 doluysa `compose.yaml` içindeki sol taraftaki portu örneğin `3006:3005` yap ve `localhost:3006` adresini aç.
 
-`Dockerfile` üç aşamalıdır: bağımlılıkları `npm ci` ile kurar, uygulamayı derler, son imaja yalnızca Next.js `standalone` çıktısını ve statik dosyaları alır. Son süreç ayrıcalıksız `nextjs` kullanıcısıyla, `PORT=3005` ile çalışır. `compose.yaml` web servisini ve kalıcı `anubix_data` birimini kullanır. SQLite ve yüklenen dosyalar bu birimde kalır. Ollama servisini otomatik kurmaz. Geliştirme sırasında hızlı yenileme için yerel `npm run dev` akışı daha basittir.
+`Dockerfile` üç aşamalıdır: bağımlılıkları `npm ci` ile kurar, uygulamayı derler, son imaja Next.js `standalone` çıktısını, statik dosyaları ve hatırlatma işçisini alır. Süreçler ayrıcalıksız `nextjs` kullanıcısıyla çalışır; web `PORT=3005` kullanır. `compose.yaml` web ve mail servislerini aynı kalıcı `anubix_data` birimine bağlar. SQLite ve yüklenen dosyalar bu birimde kalır. Mail ayarları yoksa işçi e-posta göndermez. Ollama servisini otomatik kurmaz.
 
 ## Kişisel paneli kurma
 
-İlk kullanımda `npm run setup` komutuyla yönetici kullanıcı adı ve güçlü parola oluştur. Komut, yalnızca kullanıcı adını ve scrypt parola hash'ini `.env.local` içine yazar. Parolanın kendisi saklanmaz. Giriş odadaki dikey monitörden veya sayfanın altındaki hızlı listeden açılır.
+İlk kullanımda `npm run setup` komutuyla yönetici kullanıcı adı ve güçlü parola oluştur. Komut, yalnızca kullanıcı adını ve scrypt parola hash'ini `.env.local` içine yazar. Parolanın kendisi saklanmaz. Giriş odadaki gizli dikey monitörden açılır; hızlı listede giriş bağlantısı bulunmaz. Herkese açık depodaki kodu gören biri panelin varlığını anlayabilir, ama oturum açmadan kişisel içeriğe erişemez.
 
 Veri konumu yerel çalıştırmada `.anubix-data/` klasörü, Docker'da `anubix_data` adlı kalıcı birimdir. SQLite dosyası, oturumlar, notlar, görevler, etkinlikler, sohbet geçmişi ve yüklenen dosyalar burada tutulur. Yedeklemeden önce uygulamayı durdur ve **tüm veri klasörünü/birimini** kopyala; sadece `.sqlite` dosyasını kopyalamak WAL kullanımında son değişiklikleri kaçırabilir. `docker compose down -v` kalıcı birimi siler; normal `docker compose down` silmez.
 
-Görev tarihi geldiğinde panel açıkken üst köşede anımsatıcı görünür. Bu sürüm kapalı tarayıcıya bildirim ya da e-posta göndermez. Takvimde güne tıklamak etkinlik formuna o tarihi doldurur. Not ve etkinliklere yalnızca giriş yapılmış oturumdan erişilir.
+Görev tarihi geldiğinde panel açıkken üst köşede anımsatıcı görünür. E-posta ayarlanır ve mail işçisi çalışırsa tarayıcı kapalıyken de yöneticiye günlük özet gider. Takvimde güne tıklamak etkinlik formuna o tarihi doldurur. Not ve etkinliklere yalnızca giriş yapılmış oturumdan erişilir.
+
+## Yalnızca yöneticiye e-posta hatırlatmaları
+
+Ziyaretçiler için iletişim formu veya e-posta gönderme uç noktası yoktur. Kodlu giriş doğrulaması da eklenmedi. Görev ve etkinlik başlıkları yalnızca `.env.local` içinde belirttiğin **tek yönetici adresine** günlük düz metin özeti olarak gönderilir; açıklamalar ve dosyalar gönderilmez.
+
+1. [Resend hesabında](https://resend.com/docs/dashboard/domains/introduction) gönderim için `bildirim.anubix.dev` gibi ayrı bir alt alan adı ekleyip doğrula. Resend'in **senin hesabın için gösterdiği** DNS kayıtlarını Squarespace DNS'e gir. Google Workspace'in `anubix.dev` kök alanındaki MX kayıtlarını değiştirme. Alan adı doğrulaması ve API anahtarı olmadan gerçek e-posta gönderilemez.
+2. Resend'de yalnızca gönderme yetkili bir API anahtarı oluştur. `npm run setup` ile oluşan `.env.local` dosyasına şu satırları ekle; adresleri gerçek değerlerinle değiştir:
+
+```dotenv
+RESEND_API_KEY=re_...
+ANUBIX_MAIL_FROM=Anubix <hatirlatma@bildirim.anubix.dev>
+ANUBIX_MAIL_TO=senin-google-workspace-adresin@anubix.dev
+ANUBIX_MAIL_TIME_ZONE=Europe/Istanbul
+ANUBIX_MAIL_HOUR=9
+```
+
+3. Docker'da `docker compose up --build -d` hem web'i hem mail işçisini başlatır. Yerel `npm run dev` kullanıyorsan ayrı bir terminalde `npm run mail:worker` çalıştır. `npm run mail:check` tek kontrol yapar ve sonucu gösterir. **Gerçek ayarlar girilmişse bu komut hatırlatma e-postası gönderebilir.**
+
+İşçi her 30 dakikada bir kontrol eder. Belirtilen yerel saatten sonra o gün için tek özet gönderir: tamamlanmamış ve tarihi gelmiş görevler ile o günün takvim etkinlikleri. O gün kayıt yoksa e-posta çıkmaz; daha sonra kayıt eklenirse sonraki kontrolde gönderilebilir. Başarılı gönderimi SQLite'da kaydeder; aynı gün yeniden göndermez. Gönderim hatasında aynı gün yeniden dener. Resend'e gönderilen içerik yalnızca bu başlık ve tarihlerden oluşur. Uygulama ve işçi çalışmıyorsa hatırlatma gönderilemez.
 
 ## Bix yerel model bağlantısı
 
@@ -132,9 +154,10 @@ Yerel `npm run dev` bu adresle çalışır. Docker Compose, Ollama için varsay�
 | Not oluşturma, düzenleme, silme | Çalışıyor; SQLite'da kalıcı |
 | Görev oluşturma, tarih verme, tamamlama, düzenleme, silme | Çalışıyor; zamanı gelenler panel açıkken anımsatıcı olarak gösterilir |
 | Takvimde ay değiştirme, tarih seçme, etkinlik ekleme/düzenleme/silme | Çalışıyor |
+| Yöneticiye günlük görev/takvim e-postası | Resend alan adı ve API anahtarı ayarlanıp mail işçisi çalışırsa çalışır |
 | Sandığa dosya yükleme, indirme, silme | Çalışıyor; dosya başına 10 MB, toplam 100 MB |
 | Bix ile sohbet ve geçmiş | `OLLAMA_MODEL` ve çalışan Ollama varsa çalışır; model yoksa kapalı kalır |
-| E-posta/push hatırlatması, otomatik yedekleme | Henüz yok |
+| Ziyaretçi iletişim formu, push bildirimi, otomatik yedekleme | Henüz yok |
 | Örnek proje 02–04 | Gerçek içerik eklenene kadar boş yuva |
 
 Tarayıcıda hareket tercihi saklanır. Kişisel veriler sunucudaki `.anubix-data/` dizininde veya Docker'da `anubix_data` biriminde tutulur.
@@ -179,7 +202,7 @@ Proje kapağı olarak gerçek bir görsel kullanmak için görseli `public/` alt
 - **Esc**: sahneyi atlar, moladan/uykudan masaya döndürür, tam ekranı kapatır. **← →**: bölge değiştirir.
 - Sistem "hareketi azalt" ayarına uyar; sağ üstteki **Hareket** düğmesiyle de değiştirilebilir. Azaltılmış modda senaryolar oynamaz, sonuç anında gösterilir; içerik ve etkileşimler aynen çalışır.
 - Ekran okuyucular için oda kısaca betimlenir; alt karttaki durum metni canlı bölge olarak okunur.
-- Sayfanın altındaki **hızlı liste** projelere ve giriş ekranına animasyonsuz ulaşır.
+- Sayfanın altındaki **hızlı liste** projelere animasyonsuz ulaşır.
 
 ## Proje yapısı
 
@@ -216,7 +239,8 @@ anubix/
 │       └── home/QuickLook.tsx  # Animasyonsuz hızlı liste
 ├── public/                     # Doğrudan sunulan statik dosyalar
 ├── Dockerfile                  # Üretim imajı (port 3005)
-├── compose.yaml                # Web + kalıcı Docker veri birimi
+├── compose.yaml                # Web + mail işçisi + kalıcı Docker veri birimi
+├── scripts/mail-worker.mjs     # Yöneticiye günlük e-posta özeti
 ├── next.config.ts              # Standalone çıktı ayarı
 ├── package.json                # Bağımlılıklar ve komutlar
 └── README.md                   # Bu rehber
@@ -240,7 +264,7 @@ Her aşamada küçük bir özellik geliştirip çalıştırma, tür kontrolü ve
 1. **Temel iskelet:** Next.js, TypeScript, Docker ve GitHub. ✅
 2. **Etkileşimli ön yüz:** İzometrik oda ve voxel panel. ✅
 3. **Kişisel araçlar:** Giriş, notlar, görevler, takvim, dosyalar ve isteğe bağlı Ollama bağlantısı. ✅ İlk yerel sürüm.
-4. **Geliştirme:** Gerçek proje içerikleri, kullanılabilirlik, animasyon performansı, yedekleme ve e-posta bildirimleri.
+4. **Geliştirme:** Gerçek proje içerikleri, kullanılabilirlik, animasyon performansı, yedekleme ve mail işçisinin gerçek hesapla doğrulanması.
 5. **Yayın:** Kalıcı veri sağlayan barındırma veya farklı bir yönetilen veri/depo mimarisi seçimi; HTTPS ve domain bağlama.
 
 ## Ücretsiz yayın araştırması
@@ -252,7 +276,7 @@ Her aşamada küçük bir özellik geliştirip çalıştırma, tür kontrolü ve
 | [Vercel Hobby](https://vercel.com/docs/plans/hobby) | Next.js için en kolay ilk yayın adayı; GitHub bağlantısı, otomatik HTTPS ve özel alan adı | Ücretsiz plan yalnızca kişisel, ticari olmayan kullanım için. Kota aşılırsa özellikler durabilir. |
 | [Cloudflare Pages](https://developers.cloudflare.com/pages/framework-guides/nextjs/deploy-a-static-nextjs-site/) | Sadece statik ilk sayfa için alternatif | Bu depo sunucu özelliklerine açık kalsın diye `output: "standalone"` kullanıyor. Pages'in statik Next.js akışı için ayrıca statik export gerekir; gelecekteki API/oturum özellikleri bu modda çalışmaz. |
 | [Supabase Free](https://supabase.com/pricing) | İleride kimlik doğrulama, veritabanı ve küçük dosyalar için aday | 500 MB veritabanı, 1 GB dosya depolama; etkin olmayan ücretsiz proje duraklatılabilir. Şimdi projeye eklenmedi. |
-| [Resend Free](https://resend.com/pricing) | İleride uygulamanın bildirim e-postaları için aday | 3.000 e-posta/ay, 100 e-posta/gün. Google Workspace gelen kutusunun yerine geçmez. Şimdi bağlanmadı. |
+| [Resend Free](https://resend.com/pricing) | Yöneticiye hatırlatma gönderen işçi için seçildi | 3.000 e-posta/ay, 100 e-posta/gün. Google Workspace gelen kutusunun yerine geçmez; hesap, DNS ve API anahtarı henüz ayarlanmadı. |
 
 **Bu sürüm için yayın kararı:** Vercel/Cloudflare gibi geçici dosya sistemli hedeflere mevcut SQLite ve dosya depolama ile doğrudan dağıtım yapılmaz. Ücretsiz statik portföy yayını mümkün; kişisel panel için kalıcı diskli bir host veya veritabanı/dosya deposunu yönetilen servise taşıma gerekir. Yerel LLM de ayrı çalışan donanım ister. Yayına çıkmadan önce bu mimari seçilip yedekleme ve HTTPS hazırlanmalı.
 

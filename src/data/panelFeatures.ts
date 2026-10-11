@@ -45,7 +45,7 @@ export const panelFeatures: PanelFeature[] = [
     title: "Görev panosu",
     subtitle: "Planlayıcı ve anımsatıcılar",
     description: "Günlük ve haftalık görevlerim, anımsatıcılarım.",
-    planned: ["Öncelik", "E-posta ile anımsatma"],
+    planned: ["Öncelik", "Özel tekrar kuralları"],
     color: "#f2a35a",
   },
   {
@@ -54,7 +54,7 @@ export const panelFeatures: PanelFeature[] = [
     title: "Duvar takvimi",
     subtitle: "Takvim",
     description: "Etkinliklerim ve teslim tarihlerim.",
-    planned: ["Görevlerle bağlantı", "E-posta hatırlatmaları"],
+    planned: ["Görevlerle bağlantı", "Saat bazlı hatırlatmalar"],
     color: "#62b6ee",
   },
   {

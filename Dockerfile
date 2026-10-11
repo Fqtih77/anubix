@@ -13,12 +13,14 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV ANUBIX_DATA_DIR=/app/data
 ENV PORT=3005
 ENV HOSTNAME=0.0.0.0
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs && mkdir /app/data && chown nextjs:nextjs /app/data
 COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nextjs /app/scripts/mail-worker.mjs ./scripts/mail-worker.mjs
 USER nextjs
 EXPOSE 3005
 VOLUME /app/data

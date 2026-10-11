@@ -38,7 +38,7 @@ function RoomHudImpl({
         <Link href="/" className={styles.brand} aria-label="Anubix ana sayfa">
           anubix<span>.</span>
         </Link>
-        <span className={styles.chip}>v0.3 · kişisel dünya</span>
+        <span className={styles.chip}>v0.4 · anubix dünyası</span>
         <nav className={styles.tools} aria-label="Sayfa araçları">
           <a href="#hizli-bakis" className={styles.tool}>
             Hızlı liste
