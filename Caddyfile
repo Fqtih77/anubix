@@ -1,0 +1,7 @@
+www.anubix.dev {
+  redir https://anubix.dev{uri} permanent
+}
+
+anubix.dev {
+  reverse_proxy web:3005
+}

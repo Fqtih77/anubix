@@ -2,7 +2,7 @@
 
 **Anubix**, CV'mi, projelerimi, başarılarımı ve hesaplarımı bir araya getirmek için adım adım geliştirdiğim kişisel platform. İzometrik bir oda üzerinden projelerime ulaşılır; özel panelde planlayıcı, not defteri, takvim/anımsatıcı ve kişisel dosya alanı bulunur. Bix asistanı, ayrıca kurulan yerel bir dil modeline bağlanabilir.
 
-> **Durum (v0.4):** Herkese açık izometrik oda ve oturumla korunan kişisel panel çalışır. Notlar, görevler, takvim ve dosyalar kalıcı SQLite verisi kullanır. İsteğe bağlı Resend ayarlarıyla yalnızca yöneticiye günlük hatırlatma özeti gönderilir. Bix, yerel Ollama modeli ayarlanırsa sohbet eder. Push bildirimi, otomatik yedekleme ve bulut yayını henüz yoktur.
+> **Durum (v0.4):** Herkese açık izometrik oda ve oturumla korunan kişisel panel çalışır. Notlar, görevler, takvim ve dosyalar kalıcı SQLite verisi kullanır. İsteğe bağlı Resend ayarlarıyla yalnızca yöneticiye günlük hatırlatma özeti gönderilir. Bix, yerel Ollama modeli ayarlanırsa sohbet eder. Sunucu için HTTPS ve elle başlatılan yedekleme hazırdır; bulut yayını henüz yoktur.
 
 ## İçindekiler
 
@@ -10,6 +10,7 @@
 - [Teknolojiler](#teknolojiler)
 - [Hızlı başlangıç](#hızlı-başlangıç)
 - [Docker ile çalıştırma](#docker-ile-çalıştırma)
+- [Sunucuda HTTPS ile çalıştırma](#sunucuda-https-ile-çalıştırma)
 - [Kişisel paneli kurma](#kişisel-paneli-kurma)
 - [Yalnızca yöneticiye e-posta hatırlatmaları](#yalnızca-yöneticiye-e-posta-hatırlatmaları)
 - [Bix yerel model bağlantısı](#bix-yerel-model-bağlantısı)
@@ -92,6 +93,24 @@ docker compose up --build
 Ardından `http://localhost:3005` adresini aç. Durdurmak için terminalde `Ctrl+C`, arka planda başlatıldıysa `docker compose down` kullan. Port 3005 doluysa `compose.yaml` içindeki sol taraftaki portu örneğin `3006:3005` yap ve `localhost:3006` adresini aç.
 
 `Dockerfile` üç aşamalıdır: bağımlılıkları `npm ci` ile kurar, uygulamayı derler, son imaja Next.js `standalone` çıktısını, statik dosyaları ve hatırlatma işçisini alır. Süreçler ayrıcalıksız `nextjs` kullanıcısıyla çalışır; web `PORT=3005` kullanır. `compose.yaml` web ve mail servislerini aynı kalıcı `anubix_data` birimine bağlar. SQLite ve yüklenen dosyalar bu birimde kalır. Mail ayarları yoksa işçi e-posta göndermez. Ollama servisini otomatik kurmaz.
+
+## Sunucuda HTTPS ile çalıştırma
+
+`compose.prod.yaml`, tek bir Docker sunucusu için web, mail ve Caddy servislerini tanımlar. Caddy `anubix.dev` ve `www.anubix.dev` için HTTPS sertifikası alır; `www` adresini ana adrese yönlendirir. Web servisi dışarıya 3005 portunu açmaz. Bu yapılandırma henüz canlı sunucuda kurulmadı.
+
+1. Sunucuda Docker Engine ve Compose kurulu olmalı. Depoyu klonla; `.env.local` dosyasını **Git dışında ve güvenli bir yolla** sunucuda oluştur. `npm run setup` ile yönetici hesabını burada da oluşturabilir, mail ayarlarını ayrıca ekleyebilirsin. Var olan yerel `.env.local` dosyasındaki sırları Git'e koyma.
+2. Squarespace DNS'te `anubix.dev` için sunucunun genel IPv4 adresine işaret eden A kaydı, `www` için ana adrese işaret eden CNAME kaydı ayarla. Sunucunun güvenlik kurallarında TCP 80 ve 443'e izin ver. SSH için 22'yi yalnızca güvendiğin IP'lere aç; **3005'i internete açma**. Google Workspace ve Resend için kullanılan MX/TXT/CNAME kayıtlarını koru.
+3. DNS kayıtları sunucuyu gösterdikten sonra depo kökünde çalıştır:
+
+```bash
+docker compose -f compose.prod.yaml up --build -d
+docker compose -f compose.prod.yaml ps
+docker compose -f compose.prod.yaml logs --tail=100 caddy
+```
+
+Tarayıcıda `https://anubix.dev` adresini ve yönetici girişini kontrol et. Sertifika alınamıyorsa önce DNS'in doğru IP'ye işaret ettiğini ve 80/443 erişimini kontrol et. `ANUBIX_HTTPS=true` üretim dosyasında tanımlıdır; oturum çerezi yalnızca HTTPS üzerinden gönderilir.
+
+**Yedek:** Depo kökünde `sh scripts/backup-prod.sh` komutu web ve mail süreçlerini kısa süre durdurur, SQLite ve yüklenen dosyaları birlikte `.anubix-backups/` içine sıkıştırır, sonra süreçleri başlatır. Yedekler Git'e girmez. Dosyayı düzenli olarak **sunucu dışına** güvenli biçimde kopyala; aynı sunucudaki tek kopya, sunucu kaybolursa işe yaramaz. Bu komut manuel çalışır; otomatik zamanlama ve geri yükleme henüz kurulmadı. `docker compose -f compose.prod.yaml down -v` kalıcı veriyi siler.
 
 ## Kişisel paneli kurma
 
@@ -240,7 +259,10 @@ anubix/
 ├── public/                     # Doğrudan sunulan statik dosyalar
 ├── Dockerfile                  # Üretim imajı (port 3005)
 ├── compose.yaml                # Web + mail işçisi + kalıcı Docker veri birimi
+├── compose.prod.yaml           # Sunucuda web + mail + HTTPS ters proxy
+├── Caddyfile                   # Alan adı, HTTPS ve www yönlendirmesi
 ├── scripts/mail-worker.mjs     # Yöneticiye günlük e-posta özeti
+├── scripts/backup-prod.sh      # Sunucudaki tüm veri birimini yedekleme
 ├── next.config.ts              # Standalone çıktı ayarı
 ├── package.json                # Bağımlılıklar ve komutlar
 └── README.md                   # Bu rehber
@@ -264,8 +286,8 @@ Her aşamada küçük bir özellik geliştirip çalıştırma, tür kontrolü ve
 1. **Temel iskelet:** Next.js, TypeScript, Docker ve GitHub. ✅
 2. **Etkileşimli ön yüz:** İzometrik oda ve voxel panel. ✅
 3. **Kişisel araçlar:** Giriş, notlar, görevler, takvim, dosyalar ve isteğe bağlı Ollama bağlantısı. ✅ İlk yerel sürüm.
-4. **Geliştirme:** Gerçek proje içerikleri, kullanılabilirlik, animasyon performansı, yedekleme ve mail işçisinin gerçek hesapla doğrulanması.
-5. **Yayın:** Kalıcı veri sağlayan barındırma veya farklı bir yönetilen veri/depo mimarisi seçimi; HTTPS ve domain bağlama.
+4. **Geliştirme:** Gerçek proje içerikleri, kullanılabilirlik, animasyon performansı, otomatik sunucu dışı yedekleme ve mail işçisinin gerçek hesapla doğrulanması.
+5. **Yayın:** Kalıcı veri sağlayan barındırma, DNS ve HTTPS; üretim Compose yapılandırması hazır, sunucu kurulumu bekliyor.
 
 ## Ücretsiz yayın araştırması
 
@@ -276,15 +298,15 @@ Her aşamada küçük bir özellik geliştirip çalıştırma, tür kontrolü ve
 | [Vercel Hobby](https://vercel.com/docs/plans/hobby) | Next.js için en kolay ilk yayın adayı; GitHub bağlantısı, otomatik HTTPS ve özel alan adı | Ücretsiz plan yalnızca kişisel, ticari olmayan kullanım için. Kota aşılırsa özellikler durabilir. |
 | [Cloudflare Pages](https://developers.cloudflare.com/pages/framework-guides/nextjs/deploy-a-static-nextjs-site/) | Sadece statik ilk sayfa için alternatif | Bu depo sunucu özelliklerine açık kalsın diye `output: "standalone"` kullanıyor. Pages'in statik Next.js akışı için ayrıca statik export gerekir; gelecekteki API/oturum özellikleri bu modda çalışmaz. |
 | [Supabase Free](https://supabase.com/pricing) | İleride kimlik doğrulama, veritabanı ve küçük dosyalar için aday | 500 MB veritabanı, 1 GB dosya depolama; etkin olmayan ücretsiz proje duraklatılabilir. Şimdi projeye eklenmedi. |
-| [Resend Free](https://resend.com/pricing) | Yöneticiye hatırlatma gönderen işçi için seçildi | 3.000 e-posta/ay, 100 e-posta/gün. Google Workspace gelen kutusunun yerine geçmez; hesap, DNS ve API anahtarı henüz ayarlanmadı. |
+| [Resend Free](https://resend.com/pricing) | Yöneticiye hatırlatma gönderen işçi için seçildi | Google Workspace gelen kutusunun yerine geçmez; gönderim alanı doğrulandı ve yerel ayarlar yapıldı. Güncel kota sağlayıcıdan kontrol edilmeli. |
 
-**Bu sürüm için yayın kararı:** Vercel/Cloudflare gibi geçici dosya sistemli hedeflere mevcut SQLite ve dosya depolama ile doğrudan dağıtım yapılmaz. Ücretsiz statik portföy yayını mümkün; kişisel panel için kalıcı diskli bir host veya veritabanı/dosya deposunu yönetilen servise taşıma gerekir. Yerel LLM de ayrı çalışan donanım ister. Yayına çıkmadan önce bu mimari seçilip yedekleme ve HTTPS hazırlanmalı.
+**Bu sürüm için yayın kararı:** Vercel/Cloudflare gibi geçici dosya sistemli hedeflere mevcut SQLite ve dosya depolama ile doğrudan dağıtım yapılmaz. Kişisel panel için kalıcı diskli bir host seçildi; Oracle Cloud hesap başvurusu destek yanıtı bekliyor. Üretim Compose dosyası, HTTPS ve manuel yedek komutu hazırlandı. Yerel LLM ayrıca çalışan donanım ister.
 
 ## Alan adı ve e-posta DNS notları
 
-Alan adı kaydı, DNS yönetimi, web yayını ve Google Workspace e-postası farklı şeylerdir. Alan adın Squarespace tarafından yönetiliyorsa DNS değişiklikleri oradan yapılır. Barındırma seçildikten sonra `anubix.dev` / `www.anubix.dev` alan adlarını o sağlayıcıya ekle; sağlayıcının gösterdiği **projeye özel** A/CNAME değerlerini Squarespace DNS ekranına gir. Genel örnek kayıtları körlemesine kopyalama. [Vercel alan adı rehberi](https://vercel.com/docs/domains/set-up-custom-domain) ve [Squarespace DNS yardımı](https://support.squarespace.com/hc/en-us/articles/360035485391-DNS-records-for-connecting-third-party-domains) adımları açıklar.
+Alan adı kaydı, DNS yönetimi, web yayını ve Google Workspace e-postası farklı şeylerdir. Alan adın Squarespace tarafından yönetiliyorsa DNS değişiklikleri oradan yapılır. Sunucu açıldığında `anubix.dev` A kaydına **o sunucunun gerçek genel IPv4 adresini** yaz; `www` için `anubix.dev` adresine CNAME kullan. Sunucu IP'si belli olmadan DNS'i değiştirme. [Squarespace DNS yardımı](https://support.squarespace.com/hc/en-us/articles/360035485391-DNS-records-for-connecting-third-party-domains) adımları açıklar.
 
-Google Workspace kullanıyorsan mevcut MX, SPF, DKIM ve DMARC kayıtlarını kaydet ve web yönlendirmesi yaparken bunları silme. MX kayıtları gelen e-postayı belirler; web için genelde `@` A kaydı ve `www` CNAME kaydı değiştirilir. [Squarespace Google Workspace MX rehberi](https://support.squarespace.com/hc/en-us/articles/360001476528-Add-Google-Workspace-MX-records-to-your-domain). Alan adı DNS ayarları bu aşamada değiştirilmedi.
+Google Workspace kullanıyorsan mevcut MX, SPF, DKIM ve DMARC kayıtlarını kaydet ve web yönlendirmesi yaparken bunları silme. MX kayıtları gelen e-postayı belirler; web için genelde `@` A kaydı ve `www` CNAME kaydı değiştirilir. [Squarespace Google Workspace MX rehberi](https://support.squarespace.com/hc/en-us/articles/360001476528-Add-Google-Workspace-MX-records-to-your-domain). Resend için gereken `bildirim.anubix.dev` DNS kayıtları daha önce eklendi; web DNS kayıtları henüz değiştirilmedi.
 
 ## Geliştirme akışı
 
@@ -304,6 +326,6 @@ Küçük bir değişiklik için önerilen sıra:
 
 ## Güvenlik ve katkı
 
-`.env*` dosyaları, `.env.example` dışında Git'e alınmaz. API anahtarları, Google Workspace bilgileri, kişisel dosyalar ve gerçek notlar depoya eklenmemelidir. `/panel` ve tüm kişisel API uçları oturumla korunur. Kurulumda `.env.local` ve `.anubix-data/` oluşur; ikisi de Git dışında kalır. Docker birimini silmek verileri siler. Verileri düzenli yedekle; canlı yayına çıkarken HTTPS, güvenilir ters proxy, oturum ayarları ve hız sınırlaması ayrıca gözden geçirilmeli.
+`.env*` dosyaları, `.env.example` dışında Git'e alınmaz. API anahtarları, Google Workspace bilgileri, kişisel dosyalar ve gerçek notlar depoya eklenmemelidir. `/panel` ve tüm kişisel API uçları oturumla korunur. Kurulumda `.env.local` ve `.anubix-data/` oluşur; ikisi de Git dışında kalır. Docker birimini silmek verileri siler. Sunucu yapılandırmasında HTTPS ve ters proxy hazırdır. Yedekleri sunucu dışında sakla; canlı yayına çıkarken oturum ayarlarını ve hız sınırlamasını ayrıca gözden geçir.
 
 Hata bildirimi ve katkı için GitHub issue veya pull request açılabilir. Değişikliklerden önce yukarıdaki kalite komutlarını çalıştır. Bu proje [MIT lisansı](LICENSE) ile açık kaynaklıdır.
