@@ -98,7 +98,7 @@ Ardından `http://localhost:3005` adresini aç. Durdurmak için terminalde `Ctrl
 
 `compose.prod.yaml`, tek bir Docker sunucusu için web, mail ve Caddy servislerini tanımlar. Caddy `anubix.dev` ve `www.anubix.dev` için HTTPS sertifikası alır; `www` adresini ana adrese yönlendirir. Web servisi dışarıya 3005 portunu açmaz. Bu yapılandırma henüz canlı sunucuda kurulmadı.
 
-1. Sunucuda Docker Engine ve Compose kurulu olmalı. Depoyu klonla; `.env.local` dosyasını **Git dışında ve güvenli bir yolla** sunucuda oluştur. `npm run setup` ile yönetici hesabını burada da oluşturabilir, mail ayarlarını ayrıca ekleyebilirsin. Var olan yerel `.env.local` dosyasındaki sırları Git'e koyma.
+1. Sunucuda Docker Engine ve Compose kurulu olmalı. Depoyu klonla; yerelde `npm run setup` ile oluşturduğun `.env.local` dosyasını **Git dışında ve güvenli bir yolla** sunucuya aktar. Sunucuya Node.js de kurduysan hesabı orada `npm run setup` ile oluşturabilirsin. Mail ayarları dosyada bulunmalı; sırları Git'e koyma.
 2. Squarespace DNS'te `anubix.dev` için sunucunun genel IPv4 adresine işaret eden A kaydı, `www` için ana adrese işaret eden CNAME kaydı ayarla. Sunucunun güvenlik kurallarında TCP 80 ve 443'e izin ver. SSH için 22'yi yalnızca güvendiğin IP'lere aç; **3005'i internete açma**. Google Workspace ve Resend için kullanılan MX/TXT/CNAME kayıtlarını koru.
 3. DNS kayıtları sunucuyu gösterdikten sonra depo kökünde çalıştır:
 
