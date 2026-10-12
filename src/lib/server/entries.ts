@@ -89,9 +89,9 @@ export function validate(
 	};
 }
 
-export function list(kind: EntryKind): Entry[] {
+export async function list(kind: EntryKind): Promise<Entry[]> {
 	return (
-		db()
+		await db()
 			.prepare(
 				`SELECT ${COLUMNS} FROM entries WHERE kind = ? ORDER BY COALESCE(date_value, created_at) DESC, created_at DESC`,
 			)
@@ -99,14 +99,14 @@ export function list(kind: EntryKind): Entry[] {
 	).map(map);
 }
 
-export function create(
+export async function create(
 	kind: EntryKind,
 	value: ReturnType<typeof validate>,
-): Entry {
+): Promise<Entry> {
 	if (!value) throw new Error("Invalid entry");
 	const id = randomUUID();
 	const now = new Date().toISOString();
-	db()
+	await db()
 		.prepare(
 			"INSERT INTO entries (id,kind,title,body,date_value,done,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
 		)
@@ -123,14 +123,14 @@ export function create(
 	return { id, kind, ...value, createdAt: now, updatedAt: now };
 }
 
-export function update(
+export async function update(
 	kind: EntryKind,
 	id: string,
 	value: ReturnType<typeof validate>,
-): Entry | null {
+): Promise<Entry | null> {
 	if (!value) throw new Error("Invalid entry");
 	const now = new Date().toISOString();
-	const result = db()
+	const result = await db()
 		.prepare(
 			"UPDATE entries SET title=?,body=?,date_value=?,done=?,updated_at=? WHERE id=? AND kind=?",
 		)
@@ -145,15 +145,15 @@ export function update(
 		);
 	if (!result.changes) return null;
 	return map(
-		db()
+		await db()
 			.prepare(`SELECT ${COLUMNS} FROM entries WHERE id=? AND kind=?`)
 			.get(id, kind) as Row,
 	);
 }
 
-export function remove(kind: EntryKind, id: string) {
+export async function remove(kind: EntryKind, id: string) {
 	return Boolean(
-		db().prepare("DELETE FROM entries WHERE id=? AND kind=?").run(id, kind)
+		(await db().prepare("DELETE FROM entries WHERE id=? AND kind=?").run(id, kind))
 			.changes,
 	);
 }

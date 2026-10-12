@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "PORT=3005 node .next/standalone/server.js",
     "setup": "node scripts/setup.mjs",
+    "migrate:supabase": "node scripts/migrate-to-supabase.mjs",
     "mail:worker": "node scripts/mail-worker.mjs",
     "mail:check": "node scripts/mail-worker.mjs --once",
     "test:mail": "node --test scripts/mail-worker.test.mjs",
@@ -14,15 +15,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "next": "16.4.0",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@biomejs/biome": "2.5.15",
     "typescript": "^5.0.0"
   },
   "engines": {

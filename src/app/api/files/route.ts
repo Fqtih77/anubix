@@ -1,24 +1,20 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { guard } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
+import { deleteFile, storeFile } from "@/lib/server/storage";
 
 export const runtime = "nodejs";
-const MAX_FILE = 10 * 1024 * 1024;
+const MAX_FILE_MB = Number(process.env.NEXT_PUBLIC_FILE_MAX_MB || 10);
+const MAX_FILE = MAX_FILE_MB * 1024 * 1024;
 const MAX_TOTAL = 100 * 1024 * 1024;
 
-export function fileDir() {
-	return path.join(
-		process.env.ANUBIX_DATA_DIR || path.join(process.cwd(), ".anubix-data"),
-		"uploads",
-	);
-}
+export const fileKey = (name: string) => `uploads/${name}`;
 
 export async function GET(request: Request) {
 	const denied = await guard(request);
 	if (denied) return denied;
-	const files = db()
+	const files = await db()
 		.prepare(
 			"SELECT id, original_name AS name, mime, size, created_at AS createdAt FROM files ORDER BY created_at DESC",
 		)
@@ -31,7 +27,7 @@ export async function POST(request: Request) {
 	if (denied) return denied;
 	if (Number(request.headers.get("content-length")) > MAX_FILE + 100_000) {
 		return Response.json(
-			{ error: "Dosya en fazla 10 MB olabilir." },
+			{ error: `Dosya en fazla ${MAX_FILE_MB} MB olabilir.` },
 			{ status: 413 },
 		);
 	}
@@ -44,7 +40,7 @@ export async function POST(request: Request) {
 	const file = form.get("file");
 	if (!(file instanceof File) || file.size === 0 || file.size > MAX_FILE) {
 		return Response.json(
-			{ error: "1 byte ile 10 MB arasında dosya seç." },
+			{ error: `1 byte ile ${MAX_FILE_MB} MB arasında dosya seç.` },
 			{ status: 400 },
 		);
 	}
@@ -57,26 +53,20 @@ export async function POST(request: Request) {
 		.slice(0, 180);
 	if (!name)
 		return Response.json({ error: "Dosya adı geçersiz." }, { status: 400 });
-	const used = db()
+	const used = await db()
 		.prepare("SELECT COALESCE(SUM(size),0) AS used FROM files")
 		.get() as { used: number };
-	if (used.used + file.size > MAX_TOTAL)
+	if (Number(used.used) + file.size > MAX_TOTAL)
 		return Response.json(
 			{ error: "Depo 100 MB sınırına ulaştı." },
 			{ status: 413 },
 		);
 	const id = randomUUID();
 	const stored = randomUUID();
-	const dir = fileDir();
-	await mkdir(dir, { recursive: true, mode: 0o700 });
-	await writeFile(
-		path.join(dir, stored),
-		Buffer.from(await file.arrayBuffer()),
-		{ flag: "wx", mode: 0o600 },
-	);
+	await storeFile(fileKey(stored), new Uint8Array(await file.arrayBuffer()), file.type || "application/octet-stream");
 	const now = new Date().toISOString();
 	try {
-		db()
+		await db()
 			.prepare(
 				"INSERT INTO files (id,original_name,stored_name,mime,size,created_at) VALUES (?,?,?,?,?,?)",
 			)
@@ -89,7 +79,7 @@ export async function POST(request: Request) {
 				now,
 			);
 	} catch (error) {
-		await unlink(path.join(dir, stored));
+		await deleteFile(fileKey(stored));
 		throw error;
 	}
 	return Response.json(

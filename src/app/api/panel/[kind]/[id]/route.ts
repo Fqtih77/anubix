@@ -23,7 +23,7 @@ export async function PUT(request: Request, context: Context) {
 	const value = validate(input, kind);
 	if (!value)
 		return Response.json({ error: "Geçersiz veri." }, { status: 400 });
-	const item = update(kind, id, value);
+	const item = await update(kind, id, value);
 	return item
 		? Response.json({ item })
 		: Response.json({ error: "Bulunamadı." }, { status: 404 });
@@ -36,7 +36,7 @@ export async function DELETE(request: Request, context: Context) {
 	const kind = kindOf(raw);
 	if (!kind || !/^[0-9a-f-]{36}$/.test(id))
 		return Response.json({ error: "Bulunamadı." }, { status: 404 });
-	return remove(kind, id)
+	return (await remove(kind, id))
 		? Response.json({ ok: true })
 		: Response.json({ error: "Bulunamadı." }, { status: 404 });
 }

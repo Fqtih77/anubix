@@ -44,8 +44,8 @@ export function validCredentials(username: string, password: string) {
 export async function createSession(request: Request) {
 	const token = randomBytes(32).toString("base64url");
 	const expiresAt = Date.now() + SESSION_SECONDS * 1000;
-	db().prepare("DELETE FROM sessions WHERE expires_at <= ?").run(Date.now());
-	db()
+	await db().prepare("DELETE FROM sessions WHERE expires_at <= ?").run(Date.now());
+	await db()
 		.prepare("INSERT INTO sessions (token_hash, expires_at) VALUES (?, ?)")
 		.run(hash(token), expiresAt);
 	(await cookies()).set(COOKIE, token, {
@@ -61,7 +61,7 @@ export async function hasSession() {
 	if (!configured()) return false;
 	const token = (await cookies()).get(COOKIE)?.value;
 	if (!token) return false;
-	const row = db()
+	const row = await db()
 		.prepare("SELECT expires_at FROM sessions WHERE token_hash = ?")
 		.get(hash(token)) as { expires_at: number } | undefined;
 	return Boolean(row && row.expires_at > Date.now());
@@ -70,7 +70,7 @@ export async function hasSession() {
 export async function clearSession() {
 	const token = (await cookies()).get(COOKIE)?.value;
 	if (token)
-		db().prepare("DELETE FROM sessions WHERE token_hash = ?").run(hash(token));
+		await db().prepare("DELETE FROM sessions WHERE token_hash = ?").run(hash(token));
 	(await cookies()).delete(COOKIE);
 }
 

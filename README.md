@@ -2,7 +2,7 @@
 
 **Anubix**, CV'mi, projelerimi, başarılarımı ve hesaplarımı bir araya getirmek için adım adım geliştirdiğim kişisel platform. İzometrik bir oda üzerinden CV'me ve projelerime ulaşılır; özel panelde planlayıcı, not defteri, takvim/anımsatıcı, kişisel dosya alanı ve projeleri koda dokunmadan yöneten bir komut bloğu bulunur. Bix asistanı, ayrıca kurulan yerel bir dil modeline bağlanabilir.
 
-> **Durum (v0.4):** Herkese açık izometrik oda ve oturumla korunan kişisel panel çalışır. Notlar, görevler, takvim ve dosyalar kalıcı SQLite verisi kullanır. İsteğe bağlı Resend ayarlarıyla yalnızca yöneticiye günlük hatırlatma özeti gönderilir. Bix, yerel Ollama modeli ayarlanırsa sohbet eder. Sunucu için HTTPS ve elle başlatılan yedekleme hazırdır; bulut yayını henüz yoktur.
+> **Durum (v0.4):** Herkese açık izometrik oda ve oturumla korunan kişisel panel çalışır. Yerelde SQLite, Netlify yayını için Supabase Postgres ve Storage desteklenir. Bulut hesabı ve alan adı kurulumu için [Netlify + Supabase rehberine](DEPLOY-NETLIFY.md) bak. İsteğe bağlı günlük e-posta işçisi ve yerel Ollama, Netlify yayınının parçası değildir.
 
 ## İçindekiler
 
@@ -31,7 +31,7 @@
 
 Bu proje bir öğrenme alanı. Ön yüzde izometrik bir çalışma odası var; arkada tek kullanıcıya ait, oturumla korunan bir panel çalışıyor. Notlar, görevler, takvim kayıtları ve dosyalar sunucuda saklanır. Kod açık kaynaklıdır; kişisel veriler ve parolalar Git deposuna girmez.
 
-**Önemli:** Bu sürüm yerel bilgisayarda veya kalıcı disk sağlayan Docker sunucusunda çalışmak içindir. SQLite ve dosyalar yerel diskte tutulduğu için mevcut mimariyi doğrudan Vercel gibi geçici dosya sistemli sunucusuz ortama koyma.
+**Önemli:** Yerel/Docker kurulumunda SQLite ve dosyalar yerel diskte kalır. Netlify dağıtımında `SUPABASE_DB_URL`, `SUPABASE_URL` ve `SUPABASE_SECRET_KEY` ile kalıcı veri Supabase'e taşınır; yalnızca kodu Netlify'a yüklemek yeterli değildir.
 
 ## Teknolojiler
 
@@ -313,14 +313,14 @@ Her aşamada küçük bir özellik geliştirip çalıştırma, tür kontrolü ve
 | --- | --- | --- |
 | [Vercel Hobby](https://vercel.com/docs/plans/hobby) | Next.js için en kolay ilk yayın adayı; GitHub bağlantısı, otomatik HTTPS ve özel alan adı | Ücretsiz plan yalnızca kişisel, ticari olmayan kullanım için. Kota aşılırsa özellikler durabilir. |
 | [Cloudflare Pages](https://developers.cloudflare.com/pages/framework-guides/nextjs/deploy-a-static-nextjs-site/) | Sadece statik ilk sayfa için alternatif | Bu depo sunucu özelliklerine açık kalsın diye `output: "standalone"` kullanıyor. Pages'in statik Next.js akışı için ayrıca statik export gerekir; gelecekteki API/oturum özellikleri bu modda çalışmaz. |
-| [Supabase Free](https://supabase.com/pricing) | İleride kimlik doğrulama, veritabanı ve küçük dosyalar için aday | 500 MB veritabanı, 1 GB dosya depolama; etkin olmayan ücretsiz proje duraklatılabilir. Şimdi projeye eklenmedi. |
+| [Netlify Free](https://www.netlify.com/pricing/) + [Supabase Free](https://supabase.com/pricing) | Seçilen bulut yolu; Next.js Netlify'da, veriler ve dosyalar Supabase'de | Hesap ve alan adı kurulumu [rehberde](DEPLOY-NETLIFY.md). Kotalar ve etkin olmayan Supabase projesinin duraklatılması dikkate alınmalı. |
 | [Resend Free](https://resend.com/pricing) | Yöneticiye hatırlatma gönderen işçi için seçildi | Google Workspace gelen kutusunun yerine geçmez; gönderim alanı doğrulandı ve yerel ayarlar yapıldı. Güncel kota sağlayıcıdan kontrol edilmeli. |
 
-**Bu sürüm için yayın kararı:** Vercel/Cloudflare gibi geçici dosya sistemli hedeflere mevcut SQLite ve dosya depolama ile doğrudan dağıtım yapılmaz. Kişisel panel için kalıcı diskli bir host seçildi; Oracle Cloud hesap başvurusu destek yanıtı bekliyor. Üretim Compose dosyası, HTTPS ve manuel yedek komutu hazırlandı. Yerel LLM ayrıca çalışan donanım ister.
+**Bu sürüm için yayın kararı:** Netlify + Supabase desteği eklendi. Docker/SQLite yolu da korunuyor. Bulut hesabı, canlı bağlantı ve DNS kurulumu tamamlanana kadar site yayında sayılmaz. Yerel LLM ayrıca çalışan donanım ister.
 
 ## Alan adı ve e-posta DNS notları
 
-Alan adı kaydı, DNS yönetimi, web yayını ve Google Workspace e-postası farklı şeylerdir. Alan adın Squarespace tarafından yönetiliyorsa DNS değişiklikleri oradan yapılır. Sunucu açıldığında `anubix.dev` A kaydına **o sunucunun gerçek genel IPv4 adresini** yaz; `www` için `anubix.dev` adresine CNAME kullan. Sunucu IP'si belli olmadan DNS'i değiştirme. [Squarespace DNS yardımı](https://support.squarespace.com/hc/en-us/articles/360035485391-DNS-records-for-connecting-third-party-domains) adımları açıklar.
+Alan adı kaydı, DNS yönetimi, web yayını ve Google Workspace e-postası farklı şeylerdir. Netlify yayını için `anubix.dev` alan adını Netlify'da ekledikten sonra Netlify'ın gösterdiği DNS kayıtlarını Squarespace'te uygula; Google Workspace ve Resend kayıtlarını koru. Docker/VPS yolunu seçersen yukarıdaki sunucu kurulumundaki A/CNAME kayıtlarını kullan. [Squarespace DNS yardımı](https://support.squarespace.com/hc/en-us/articles/360035485391-DNS-records-for-connecting-third-party-domains) adımları açıklar.
 
 Google Workspace kullanıyorsan mevcut MX, SPF, DKIM ve DMARC kayıtlarını kaydet ve web yönlendirmesi yaparken bunları silme. MX kayıtları gelen e-postayı belirler; web için genelde `@` A kaydı ve `www` CNAME kaydı değiştirilir. [Squarespace Google Workspace MX rehberi](https://support.squarespace.com/hc/en-us/articles/360001476528-Add-Google-Workspace-MX-records-to-your-domain). Resend için gereken `bildirim.anubix.dev` DNS kayıtları daha önce eklendi; web DNS kayıtları henüz değiştirilmedi.
 

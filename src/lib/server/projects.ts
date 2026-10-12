@@ -1,7 +1,5 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 import {
 	type CoverMotif,
 	defaultProjects,
@@ -9,6 +7,7 @@ import {
 	type ProjectStatus,
 } from "@/data/projects";
 import { db } from "./db";
+import { deleteFile, loadFile, storeFile } from "./storage";
 
 /**
  * PROJELER (sunucu)
@@ -80,12 +79,7 @@ const COLUMNS =
 
 export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 
-function imageDir() {
-	return path.join(
-		process.env.ANUBIX_DATA_DIR || path.join(process.cwd(), ".anubix-data"),
-		"project-images",
-	);
-}
+const imageKey = (name: string) => `project-images/${name}`;
 
 function parseList(json: string): string[] {
 	try {
@@ -152,9 +146,9 @@ export function toPublic(p: ProjectRecord): Project {
 }
 
 /** İlk kullanımda başlangıç projelerini bir kez içeri aktarır. */
-function ensureSeeded() {
+async function ensureSeeded() {
 	const connection = db();
-	const seeded = connection
+	const seeded = await connection
 		.prepare("SELECT value FROM settings WHERE key = 'projects_seeded'")
 		.get();
 	if (seeded) return;
@@ -162,10 +156,8 @@ function ensureSeeded() {
 	const insert = connection.prepare(
 		`INSERT OR IGNORE INTO projects (${COLUMNS}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 	);
-	connection.exec("BEGIN");
-	try {
-		defaultProjects.forEach((p, index) => {
-			insert.run(
+	for (const [index, p] of defaultProjects.entries()) {
+			await insert.run(
 				p.id,
 				p.title,
 				p.tagline,
@@ -190,46 +182,42 @@ function ensureSeeded() {
 				now,
 				now,
 			);
-		});
-		connection
-			.prepare("INSERT INTO settings (key, value) VALUES ('projects_seeded', ?)")
-			.run(now);
-		connection.exec("COMMIT");
-	} catch (error) {
-		connection.exec("ROLLBACK");
-		throw error;
 	}
-}
+	await connection
+		.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES ('projects_seeded', ?)")
+		.run(now);
+	}
 
-export function listProjects(options: { includeHidden?: boolean } = {}): ProjectRecord[] {
-	ensureSeeded();
+
+export async function listProjects(options: { includeHidden?: boolean } = {}): Promise<ProjectRecord[]> {
+	await ensureSeeded();
 	const where = options.includeHidden ? "" : "WHERE published = 1";
 	return (
-		db()
+		await db()
 			.prepare(`SELECT ${COLUMNS} FROM projects ${where} ORDER BY sort_order, created_at`)
 			.all() as Row[]
 	).map(toRecord);
 }
 
 /** Veritabanı okunamazsa gizlenmiş projeleri yanlışlıkla yayımlama. */
-export function publicProjects(): Project[] {
+export async function publicProjects(): Promise<Project[]> {
 	try {
-		return listProjects().map(toPublic);
+		return (await listProjects()).map(toPublic);
 	} catch (error) {
 		console.error("Projeler veritabanından okunamadı:", error);
 		return [];
 	}
 }
 
-function getRow(id: string): Row | undefined {
-	ensureSeeded();
-	return db().prepare(`SELECT ${COLUMNS} FROM projects WHERE id = ?`).get(id) as
+async function getRow(id: string): Promise<Row | undefined> {
+	await ensureSeeded();
+	return await db().prepare(`SELECT ${COLUMNS} FROM projects WHERE id = ?`).get(id) as
 		| Row
 		| undefined;
 }
 
-export function getProject(id: string): ProjectRecord | null {
-	const row = getRow(id);
+export async function getProject(id: string): Promise<ProjectRecord | null> {
+	const row = await getRow(id);
 	return row ? toRecord(row) : null;
 }
 
@@ -344,21 +332,21 @@ function slugify(title: string) {
 	return slug || "proje";
 }
 
-function uniqueId(base: string) {
+async function uniqueId(base: string) {
 	let id = base;
-	for (let n = 2; getRow(id); n++) id = `${base}-${n}`;
+	for (let n = 2; await getRow(id); n++) id = `${base}-${n}`;
 	return id;
 }
 
-export function createProject(value: ProjectInput): ProjectRecord {
-	ensureSeeded();
+export async function createProject(value: ProjectInput): Promise<ProjectRecord> {
+	await ensureSeeded();
 	const connection = db();
-	const id = uniqueId(slugify(value.title));
+	const id = await uniqueId(slugify(value.title));
 	const now = new Date().toISOString();
-	const { next } = connection
+	const { next } = await connection
 		.prepare("SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM projects")
 		.get() as { next: number };
-	connection
+	await connection
 		.prepare(
 			`INSERT INTO projects (${COLUMNS}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		)
@@ -387,11 +375,11 @@ export function createProject(value: ProjectInput): ProjectRecord {
 			now,
 			now,
 		);
-	return getProject(id) as ProjectRecord;
+	return (await getProject(id)) as ProjectRecord;
 }
 
-export function updateProject(id: string, value: ProjectInput): ProjectRecord | null {
-	const result = db()
+export async function updateProject(id: string, value: ProjectInput): Promise<ProjectRecord | null> {
+	const result = await db()
 		.prepare(
 			"UPDATE projects SET title=?,tagline=?,status=?,period=?,summary=?,description=?,done=?,planned=?,tech=?,github=?,live=?,live_note=?,accent=?,accent2=?,image_alt=?,published=?,updated_at=? WHERE id=?",
 		)
@@ -419,34 +407,28 @@ export function updateProject(id: string, value: ProjectInput): ProjectRecord | 
 }
 
 export async function deleteProject(id: string) {
-	const row = getRow(id);
+	const row = await getRow(id);
 	if (!row) return false;
-	db().prepare("DELETE FROM projects WHERE id = ?").run(id);
+	await db().prepare("DELETE FROM projects WHERE id = ?").run(id);
 	if (row.image_file)
-		await unlink(path.join(imageDir(), row.image_file)).catch(() => {});
+		await deleteFile(imageKey(row.image_file)).catch(() => {});
 	return true;
 }
 
 /** Bütün projeleri, her ID tam bir kez geçecek şekilde yeniden sıralar. */
-export function reorderProjects(ids: string[]): boolean {
-	ensureSeeded();
+export async function reorderProjects(ids: string[]): Promise<boolean> {
+	await ensureSeeded();
 	const connection = db();
-	const current = connection.prepare("SELECT id FROM projects").all() as { id: string }[];
+	const current = await connection.prepare("SELECT id FROM projects").all() as { id: string }[];
 	const known = new Set(current.map((project) => project.id));
 	if (ids.length !== known.size || new Set(ids).size !== ids.length || ids.some((id) => !known.has(id)))
 		return false;
-	const update = connection.prepare("UPDATE projects SET sort_order = ? WHERE id = ?");
-	connection.exec("BEGIN");
-	try {
-		ids.forEach((id, index) => {
-			update.run(index, id);
-		});
-		connection.exec("COMMIT");
-		return true;
-	} catch (error) {
-		connection.exec("ROLLBACK");
-		throw error;
-	}
+	if (!ids.length) return true;
+	const cases = ids.map(() => "WHEN ? THEN ?").join(" ");
+	const placeholders = ids.map(() => "?").join(",");
+	const values = ids.flatMap((id, index) => [id, index]);
+	await connection.prepare(`UPDATE projects SET sort_order = CASE id ${cases} END WHERE id IN (${placeholders})`).run(...values, ...ids);
+	return true;
 }
 
 /* ---------- Görseller ---------- */
@@ -467,49 +449,47 @@ export async function saveProjectImage(
 	id: string,
 	file: File,
 ): Promise<{ project: ProjectRecord } | { error: string }> {
-	const row = getRow(id);
+	const row = await getRow(id);
 	if (!row) return { error: "Proje bulunamadı." };
 	if (file.size === 0 || file.size > MAX_IMAGE_BYTES)
 		return { error: "Görsel en fazla 3 MB olabilir." };
 	const bytes = new Uint8Array(await file.arrayBuffer());
 	const type = detectImage(bytes);
 	if (!type) return { error: "Yalnızca PNG, JPG veya WebP görsel yüklenebilir." };
-	const dir = imageDir();
-	await mkdir(dir, { recursive: true, mode: 0o700 });
 	const stored = `${randomUUID()}.${type.ext}`;
-	await writeFile(path.join(dir, stored), bytes, { flag: "wx", mode: 0o600 });
+	await storeFile(imageKey(stored), bytes, type.mime);
 	try {
-		db()
+		await db()
 			.prepare(
 				"UPDATE projects SET image_file=?, image_mime=?, updated_at=? WHERE id=?",
 			)
 			.run(stored, type.mime, new Date().toISOString(), id);
 	} catch (error) {
-		await unlink(path.join(dir, stored)).catch(() => {});
+		await deleteFile(imageKey(stored)).catch(() => {});
 		throw error;
 	}
-	if (row.image_file) await unlink(path.join(dir, row.image_file)).catch(() => {});
-	return { project: getProject(id) as ProjectRecord };
+	if (row.image_file) await deleteFile(imageKey(row.image_file)).catch(() => {});
+	return { project: (await getProject(id)) as ProjectRecord };
 }
 
 export async function removeProjectImage(id: string) {
-	const row = getRow(id);
+	const row = await getRow(id);
 	if (!row) return null;
-	db()
+	await db()
 		.prepare(
 			"UPDATE projects SET image_file=NULL, image_mime=NULL, updated_at=? WHERE id=?",
 		)
 		.run(new Date().toISOString(), id);
 	if (row.image_file)
-		await unlink(path.join(imageDir(), row.image_file)).catch(() => {});
+		await deleteFile(imageKey(row.image_file)).catch(() => {});
 	return getProject(id);
 }
 
 export async function readProjectImage(id: string) {
-	const row = getRow(id);
+	const row = await getRow(id);
 	if (!row?.image_file || !row.image_mime) return null;
 	try {
-		const bytes = await readFile(path.join(imageDir(), row.image_file));
+		const bytes = await loadFile(imageKey(row.image_file));
 		return { bytes, mime: row.image_mime, published: Boolean(row.published) };
 	} catch {
 		return null;

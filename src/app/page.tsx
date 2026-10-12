@@ -10,5 +10,5 @@ import { publicProjects } from "@/lib/server/projects";
 export default async function Home() {
   // Projeler panelden değiştirilebildiği için sayfa derlemede değil, her istekte hazırlanır.
   await connection();
-  return <RoomExperience projects={publicProjects()} />;
+  return <RoomExperience projects={await publicProjects()} />;
 }

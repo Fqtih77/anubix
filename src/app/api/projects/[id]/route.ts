@@ -27,7 +27,7 @@ export async function PUT(request: Request, context: Context) {
 	const result = validateProject(input);
 	if ("error" in result)
 		return Response.json({ error: result.error }, { status: 400 });
-	const project = updateProject(id, result.value);
+	const project = await updateProject(id, result.value);
 	return project
 		? Response.json({ project })
 		: Response.json({ error: "Bulunamadı." }, { status: 404 });

@@ -22,12 +22,12 @@ export async function GET(request: Request) {
 		if (!(await hasSession()))
 			return Response.json({ error: "Oturum gerekli." }, { status: 401 });
 		return Response.json(
-			{ projects: listProjects({ includeHidden: true }) },
+			{ projects: await listProjects({ includeHidden: true }) },
 			{ headers: { "Cache-Control": "no-store" } },
 		);
 	}
 	return Response.json(
-		{ projects: listProjects().map(toPublic) },
+		{ projects: (await listProjects()).map(toPublic) },
 		{ headers: { "Cache-Control": "no-store" } },
 	);
 }
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 	if ("error" in result)
 		return Response.json({ error: result.error }, { status: 400 });
 	return Response.json(
-		{ project: createProject(result.value) },
+		{ project: await createProject(result.value) },
 		{ status: 201 },
 	);
 }
@@ -70,7 +70,7 @@ export async function PATCH(request: Request) {
 		!order.every((id) => typeof id === "string" && validProjectId(id))
 	)
 		return Response.json({ error: "Sıralama geçersiz." }, { status: 400 });
-	if (!reorderProjects(order as string[]))
+	if (!(await reorderProjects(order as string[])))
 		return Response.json({ error: "Sıralama tüm projeleri birer kez içermeli." }, { status: 400 });
-	return Response.json({ projects: listProjects({ includeHidden: true }) });
+	return Response.json({ projects: await listProjects({ includeHidden: true }) });
 }

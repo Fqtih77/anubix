@@ -10,20 +10,19 @@ type Message = {
 	createdAt: string;
 };
 
-function history(): Message[] {
-	return db()
+async function history(): Promise<Message[]> {
+	return (await db()
 		.prepare(
-			"SELECT id,role,content,created_at AS createdAt FROM messages ORDER BY created_at DESC, rowid DESC LIMIT 40",
+			"SELECT id,role,content,created_at AS createdAt FROM messages ORDER BY created_at DESC, id DESC LIMIT 40",
 		)
-		.all()
-		.reverse() as Message[];
+		.all() as Message[]).reverse();
 }
 
 export async function GET(request: Request) {
 	const denied = await guard(request);
 	if (denied) return denied;
 	return Response.json(
-		{ messages: history(), available: Boolean(process.env.OLLAMA_MODEL) },
+		{ messages: await history(), available: Boolean(process.env.OLLAMA_MODEL) },
 		{ headers: { "Cache-Control": "no-store" } },
 	);
 }
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
 			{ status: 400 },
 		);
 	}
-	const previous = history()
+	const previous = (await history())
 		.slice(-12)
 		.map(({ role, content }) => ({ role, content }));
 	const base = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
@@ -106,8 +105,8 @@ export async function POST(request: Request) {
 	const insert = db().prepare(
 		"INSERT INTO messages (id,role,content,created_at) VALUES (?,?,?,?)",
 	);
-	insert.run(user.id, user.role, user.content, user.createdAt);
-	insert.run(
+	await insert.run(user.id, user.role, user.content, user.createdAt);
+	await insert.run(
 		assistant.id,
 		assistant.role,
 		assistant.content,
@@ -119,6 +118,6 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
 	const denied = await guard(request, true);
 	if (denied) return denied;
-	db().prepare("DELETE FROM messages").run();
+	await db().prepare("DELETE FROM messages").run();
 	return Response.json({ ok: true });
 }

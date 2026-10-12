@@ -339,7 +339,7 @@ function Storage() {
 	return (
 		<div className={styles.stack}>
 			<p className={styles.notice}>
-				Dosya başına 10 MB, toplam 100 MB. Dosyalar yalnızca giriş yapmış
+				Dosya başına {process.env.NEXT_PUBLIC_FILE_MAX_MB} MB, toplam 100 MB. Dosyalar yalnızca giriş yapmış
 				kullanıcıya açılır.
 			</p>
 			<form className={styles.upload} onSubmit={upload}>

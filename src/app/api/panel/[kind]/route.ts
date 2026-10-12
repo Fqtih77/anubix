@@ -11,7 +11,7 @@ export async function GET(request: Request, context: Context) {
 	const kind = kindOf((await context.params).kind);
 	if (!kind) return Response.json({ error: "Bulunamadı." }, { status: 404 });
 	return Response.json(
-		{ items: list(kind) },
+		{ items: await list(kind) },
 		{ headers: { "Cache-Control": "no-store" } },
 	);
 }
@@ -35,5 +35,5 @@ export async function POST(request: Request, context: Context) {
 			{ error: "Başlık, açıklama veya tarih geçersiz." },
 			{ status: 400 },
 		);
-	return Response.json({ item: create(kind, value) }, { status: 201 });
+	return Response.json({ item: await create(kind, value) }, { status: 201 });
 }
