@@ -43,8 +43,17 @@ function postgres() {
 	if (pool) return pool;
 	const connectionString = process.env.SUPABASE_DB_URL;
 	if (!connectionString) throw new Error("SUPABASE_DB_URL is required");
-	const localHost = ["localhost", "127.0.0.1"].includes(new URL(connectionString).hostname);
-	pool = new pg.Pool({ connectionString, max: 1, ssl: !localHost });
+	const url = new URL(connectionString);
+	const localHost = ["localhost", "127.0.0.1"].includes(url.hostname);
+	// Supabase's shared pooler uses a CA outside Node's default trust store.
+	// libpq's "require" mode keeps the connection encrypted without requiring its CA.
+	// An explicit sslrootcert/verify-full setting still takes precedence.
+	if (!localHost && !url.searchParams.has("sslrootcert")) {
+		if (!url.searchParams.has("sslmode")) url.searchParams.set("sslmode", "require");
+		if (url.searchParams.get("sslmode") === "require")
+			url.searchParams.set("uselibpqcompat", "true");
+	}
+	pool = new pg.Pool({ connectionString: url.toString(), max: 1, ssl: localHost ? false : true });
 	return pool;
 }
 
