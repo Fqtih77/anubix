@@ -17,9 +17,18 @@ const pixel = Pixelify_Sans({
 });
 
 export const metadata: Metadata = {
+	metadataBase: new URL("https://anubix.dev"),
   title: "Anubix | Odama hoş geldin",
   description:
     "Anubix: projelerimi ve kişisel araçlarımı topladığım açık kaynaklı dijital alan. İzometrik odayı gez, duvardaki plaklardan projelerime ve CV'me göz at.",
+	openGraph: {
+		type: "website",
+		locale: "tr_TR",
+		siteName: "Anubix",
+		title: "Anubix | Odama hoş geldin",
+		description: "Projelerimi ve kişisel araçlarımı topladığım dijital alan.",
+		url: "https://anubix.dev",
+	},
   icons: { icon: "/favicon.svg" },
 };
 

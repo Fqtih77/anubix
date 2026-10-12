@@ -53,7 +53,7 @@ function postgres() {
 		if (url.searchParams.get("sslmode") === "require")
 			url.searchParams.set("uselibpqcompat", "true");
 	}
-	pool = new pg.Pool({ connectionString: url.toString(), max: 1, ssl: localHost ? false : true });
+	pool = new pg.Pool({ connectionString: url.toString(), max: 1, ssl: !localHost });
 	return pool;
 }
 

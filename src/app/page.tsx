@@ -1,6 +1,11 @@
 import { connection } from "next/server";
+import type { Metadata } from "next";
 import { RoomExperience } from "@/components/room/RoomExperience";
 import { publicProjects } from "@/lib/server/projects";
+
+export const metadata: Metadata = {
+	alternates: { canonical: "https://anubix.dev/" },
+};
 
 /**
  * Ana sayfa: izometrik oda.
